@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 int main(int args, char *argv[]){
     if(args >1){
         for(int i =1; i<args; i++){
