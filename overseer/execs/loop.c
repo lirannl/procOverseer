@@ -13,4 +13,5 @@ int main(int argc, char *argv[]) {
     } else {
         printf("At least one argument is expected.\n");
     }
+    return 1;
 }
