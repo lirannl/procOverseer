@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 void greetUser() {
-    printf("Hello user!");
+    printf("Hello user!\n");
 }
 
 int main(int argc, char *argv[]) {
