@@ -5,9 +5,10 @@ int main(int args, char *argv[]){
         for(int i =1; i<args; i++){
         printf("%s \n", argv[i]);
         }  
+        return 0;
     }
     else{
         printf("you done messed up");
     }
-    return 1;
+    
 }
