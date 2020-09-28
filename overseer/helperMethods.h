@@ -3,5 +3,7 @@
 #ifndef LIRAN_HELPER
 #define LIRAN_HELPER
 
-int trimEndingWhitespace(char **string);
+int trimEndingWhitespace(char *);
+void cleanup_arr(void **);
+
 #endif
