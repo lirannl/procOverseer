@@ -25,15 +25,7 @@ typedef struct strNode
 // Free the memory allocated to the list
 void cleanup_list(argList *head)
 {
-    argList *curr = head;
-    while (curr->next != NULL)
-    {
-        argList *next = curr->next;
-        printf("Freeing \"%s\".\n", curr->content);
-        curr->next = NULL;
-        //free(curr);
-        curr = next;
-    }
+
 }
 
 // Follow the list up until NULL and return its length (excluding the final NULL)
@@ -48,7 +40,74 @@ int determineLength(argList *head)
     return length - 1;
 }
 
-// Finds the first non '-' argument and sets a pointer to it
+// Finds the first non '-'-headed argument and sets a pointer to it
+void findCmdArg(argList **cmdPtr, argList *list);
+
+// Returns 1 if the input was successful
+int interpret_input(char **str, char ***args_arr, char ***opts_arr)
+{
+    char inBuf[INPUT_MAX_LENGTH];
+    // Temporary direct input - will be replaced with reading the input from the controller
+    fgets((char *__restrict)(&inBuf), INPUT_MAX_LENGTH, stdin);
+    trimEndingWhitespace(inBuf);
+    if (inBuf[0] == '\0')
+        return 0;
+    argList args_list;
+    char *token = strtok(inBuf, " ");
+    argList *current_item = &args_list;
+    // Go through the entire string
+    int num_args;
+    for (num_args = 0; token != NULL; num_args++)
+    {
+        // Copy the current token into the list
+        strcpy(current_item->content, token);
+        argList *newItem = malloc(sizeof *newItem);
+        current_item->next = newItem;
+        token = strtok(NULL, " ");
+        current_item = current_item->next; // Go to the next item
+    }
+    argList *cmdElement = NULL;
+    findCmdArg(&cmdElement, &args_list);
+    if (cmdElement == NULL)
+    {
+        cleanup_list(&args_list);
+        return 0;
+    }
+    // Set the command variable to the command
+    *str = cmdElement->content;
+    // Go to the first argument
+    current_item = &args_list;
+    // Create an accessor variable for the opts array
+    char **arr_acc = *opts_arr;
+    // Loop through all the optionals
+    int curr_arg;
+    for (curr_arg = 0; current_item != cmdElement; curr_arg++)
+    {
+        arr_acc[curr_arg] = realloc(arr_acc[curr_arg], sizeof current_item->content);
+        strcpy(arr_acc[curr_arg], current_item->content);
+        current_item = current_item->next;
+    }
+    arr_acc[curr_arg] = NULL;
+    // Go to the first command argument in the list
+    current_item = cmdElement;
+    // Set the accessor variable to the args array
+    arr_acc = *args_arr;
+    for (curr_arg = 0; curr_arg < determineLength(cmdElement); curr_arg++)
+    {
+        arr_acc[curr_arg] = realloc(arr_acc[curr_arg], sizeof current_item->content);
+        strcpy(arr_acc[curr_arg], current_item->content);
+        current_item = current_item->next;
+    }
+    arr_acc[determineLength(cmdElement) - 1] = NULL;
+    int validReturn;
+    if (!strcmp(cmdElement->content, "mem") || !strcmp(cmdElement->content, "memkill"))
+        validReturn = 2;
+    else
+        validReturn = 1;
+    cleanup_list(&args_list);
+    return validReturn;
+}
+
 void findCmdArg(argList **cmdPtr, argList *list)
 {
     // Set this to 1 to ignore the next argument
@@ -79,66 +138,4 @@ void findCmdArg(argList **cmdPtr, argList *list)
         }
         *cmdPtr = (*cmdPtr)->next;
     }
-}
-
-// Returns 1 if the input was successful
-int interpret_input(char **str, char ***args_arr, char ***opts_arr)
-{
-    char inBuf[INPUT_MAX_LENGTH];
-    // Temporary direct input - will be replaced with reading the input from the controller
-    fgets((char *__restrict)(&inBuf), INPUT_MAX_LENGTH, stdin);
-    trimEndingWhitespace(inBuf);
-    if (inBuf[0] == '\0')
-        return 0;
-    argList args_list;
-    char *token = strtok(inBuf, " ");
-    argList *current_item = &args_list;
-    // Go through the entire string
-    int num_args;
-    for (num_args = 0; token != NULL; num_args++)
-    {
-        // Copy the current token into the list
-        strcpy(current_item->content, token);
-        argList *newItem = malloc(sizeof *newItem);
-        current_item->next = newItem;
-        token = strtok(NULL, " ");
-        current_item = current_item->next; // Go to the next item
-    }
-    argList *cmdElement = NULL;
-    findCmdArg(&cmdElement, &args_list);
-    if (cmdElement == NULL)
-        return 0;
-    // Set the command variable to the command
-    *str = cmdElement->content;
-    // Go to the first argument
-    current_item = &args_list;
-    // Create an accessor variable for the opts array
-    char **arr_acc = *opts_arr;
-    // Loop through all the optionals
-    int curr_arg;
-    for (curr_arg = 0; current_item != cmdElement; curr_arg++)
-    {
-        arr_acc[curr_arg] = realloc(arr_acc[curr_arg], sizeof current_item->content);
-        strcpy(arr_acc[curr_arg], current_item->content);
-        current_item = current_item->next;
-    }
-    arr_acc[curr_arg] = NULL;
-    // Go to the first command argument in the list
-    current_item = cmdElement;
-    // Set the accessor variable to the args array
-    arr_acc = *args_arr;
-    for (curr_arg = 0; curr_arg < determineLength(cmdElement); curr_arg++)
-    {
-        arr_acc[curr_arg] = malloc(sizeof current_item->content);
-        strcpy(arr_acc[curr_arg], current_item->content);
-        current_item = current_item->next;
-    }
-    arr_acc[determineLength(cmdElement) - 1] = NULL;
-    int validReturn;
-    if (!strcmp(cmdElement->content, "mem") || !strcmp(cmdElement->content, "memkill"))
-        validReturn = 2;
-    else
-        validReturn = 1;
-    cleanup_list(&args_list);
-    return validReturn;
 }

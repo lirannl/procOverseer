@@ -2,6 +2,18 @@
     "files.associations": {
         "cstdlib": "c",
         "ratio": "c",
-        "*.tcc": "c"
+        "*.tcc": "c",
+        "list": "c",
+        "unordered_map": "c",
+        "memory": "c",
+        "fstream": "c",
+        "future": "c",
+        "initializer_list": "c",
+        "numeric": "c",
+        "streambuf": "c",
+        "tuple": "c",
+        "valarray": "c",
+        "*.inc": "c",
+        "condition_variable": "c"
     }
 }
