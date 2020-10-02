@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
                 if (valid_input)
                 {
                     // Append the execs folder to the path
-                    char cmdPath[CMD_MAX_LENGTH * 2];
+                    char cmdPath[CMD_MAX_LENGTH + 10];
                     strcat(cmdPath, "./execs/");
                     strcat(cmdPath, cmd);
                     execv(cmdPath, args);
