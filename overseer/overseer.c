@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
     // Make NULL-terminated arrays of arguments
     char **args = malloc(MAX_ARGS);
     args[MAX_ARGS] = NULL;
-    char **opts = malloc(MAX_OPTIONALS * 2 + 1);
+    char **opts = malloc((MAX_OPTIONALS * 2) + 1);
     opts[MAX_OPTIONALS * 2 + 1] = NULL;
     char buf[INPUT_MAX_LENGTH];
     int valid_input = 0;
@@ -54,17 +54,18 @@ int main(int argc, char *argv[])
         valid_input = interpret_input(&cmd, &args, &opts);
         Fork
         {
+            // Let the child process know that it isn't the actual overseer
+            am_overseer = 0;
             if (valid_input != 2)
             {
                 if (valid_input)
                 {
-                    // Let the child process know that it isn't the actual overseer
-                    am_overseer = 0;
                     // Append the execs folder to the path
                     char cmdPath[CMD_MAX_LENGTH * 2];
                     strcat(cmdPath, "./execs/");
                     strcat(cmdPath, cmd);
                     execv(cmdPath, args);
+                    printf("No such executable.\n"); // If this same process is still running on the fork - no executable was run.
                 }
                 else if (!valid_input)
                 {

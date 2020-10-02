@@ -16,6 +16,10 @@
 #define MAX_ARGS 100
 #endif
 
+#ifndef MAX_OPTIONALS
+#define MAX_OPTIONALS 3
+#endif
+
 typedef struct strNode
 {
     char content[CMD_MAX_LENGTH];
@@ -25,7 +29,6 @@ typedef struct strNode
 // Free the memory allocated to the list
 void cleanup_list(argList *head)
 {
-
 }
 
 // Follow the list up until NULL and return its length (excluding the final NULL)
@@ -68,7 +71,7 @@ int interpret_input(char **str, char ***args_arr, char ***opts_arr)
     }
     argList *cmdElement = NULL;
     findCmdArg(&cmdElement, &args_list);
-    if (cmdElement == NULL)
+    if (cmdElement == NULL || !strcmp(cmdElement->content, ""))
     {
         cleanup_list(&args_list);
         return 0;
@@ -83,6 +86,11 @@ int interpret_input(char **str, char ***args_arr, char ***opts_arr)
     int curr_arg;
     for (curr_arg = 0; current_item != cmdElement; curr_arg++)
     {
+        if (curr_arg >= MAX_OPTIONALS * 2)
+        {
+            cleanup_list(&args_list);
+            return 0;
+        }
         arr_acc[curr_arg] = realloc(arr_acc[curr_arg], sizeof current_item->content);
         strcpy(arr_acc[curr_arg], current_item->content);
         current_item = current_item->next;
