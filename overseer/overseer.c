@@ -21,7 +21,7 @@ void term(int signum)
 
 int main(int argc, char *argv[])
 {
-    /*if (argc != 2)
+    if (argc != 2)
     {
         printf("No port supplied. Please only provide a port number.\n");
         return 1;
@@ -31,8 +31,7 @@ int main(int argc, char *argv[])
     {
         printf("Invalid port number. Must be between 1 and 65535.\n");
         return 1;
-    }*/
-    int port = 3000;
+    }
     struct sigaction action;
     memset(&action, 0, sizeof(struct sigaction));
     action.sa_handler = term;
