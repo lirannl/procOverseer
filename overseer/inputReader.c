@@ -93,7 +93,6 @@ int interpret_input(char **str, char ***args_arr, char ***opts_arr)
     argList args_list;
     char *token = strtok(inBuf, " ");
     argList *current_item = &args_list;
-    //strcpy(args_list.content, token);
     // Go through the entire string
     int num_args;
     for (num_args = 0; token != NULL; num_args++)
@@ -109,6 +108,7 @@ int interpret_input(char **str, char ***args_arr, char ***opts_arr)
     findCmdArg(&cmdElement, &args_list);
     if (cmdElement == NULL)
         return 0;
+    // Set the command variable to the command
     *str = cmdElement->content;
     // Go to the first argument
     current_item = &args_list;
@@ -118,7 +118,7 @@ int interpret_input(char **str, char ***args_arr, char ***opts_arr)
     int curr_arg;
     for (curr_arg = 0; current_item != cmdElement; curr_arg++)
     {
-        arr_acc[curr_arg] = malloc(sizeof current_item->content);
+        arr_acc[curr_arg] = realloc(arr_acc[curr_arg], sizeof current_item->content);
         strcpy(arr_acc[curr_arg], current_item->content);
         current_item = current_item->next;
     }
@@ -134,6 +134,11 @@ int interpret_input(char **str, char ***args_arr, char ***opts_arr)
         current_item = current_item->next;
     }
     arr_acc[determineLength(cmdElement) - 1] = NULL;
+    int validReturn;
+    if (!strcmp(cmdElement->content, "mem") || !strcmp(cmdElement->content, "memkill"))
+        validReturn = 2;
+    else
+        validReturn = 1;
     cleanup_list(&args_list);
-    return 1;
+    return validReturn;
 }

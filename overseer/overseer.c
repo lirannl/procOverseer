@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <string.h>
 #include "inputReader.h"
+#include "handlers.h"
 
 #define CMD_MAX_LENGTH 1000
 #define INPUT_MAX_LENGTH 10000
@@ -51,23 +52,34 @@ int main(int argc, char *argv[])
         cmd = '\0';
         // Wait for input here
         valid_input = interpret_input(&cmd, &args, &opts);
-        if (!fork())
+        Fork
         {
-            if (valid_input)
+            if (valid_input != 2)
             {
-                // Let the child process know that it isn't the actual overseer
-                am_overseer = 0;
-                // Append the execs folder to the path
-                char cmdPath[CMD_MAX_LENGTH * 2];
-                strcat(cmdPath, "./execs/");
-                strcat(cmdPath, cmd);
-                execv(cmdPath, args);
-            }
-            else
-            {
-                printf("Invalid input.\n");
+                if (valid_input)
+                {
+                    // Let the child process know that it isn't the actual overseer
+                    am_overseer = 0;
+                    // Append the execs folder to the path
+                    char cmdPath[CMD_MAX_LENGTH * 2];
+                    strcat(cmdPath, "./execs/");
+                    strcat(cmdPath, cmd);
+                    execv(cmdPath, args);
+                }
+                else if (!valid_input)
+                {
+                    printf("Invalid input.\n");
+                }
             }
             exit(0);
+        }
+        else if (valid_input == 2) // Special handlers do not fork into a new process
+        {
+
+            if (!strcmp(cmd, "mem"))
+                memHandler();
+            else if (!strcmp(cmd, "memkill"))
+                memkillHandler();
         }
     }
     if (am_overseer)
