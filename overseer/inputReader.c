@@ -47,7 +47,7 @@ int determineLength(argList *head)
 void findCmdArg(argList **cmdPtr, argList *list);
 
 // Returns 1 if the input was successful
-int interpret_input(char **str, char ***args_arr, char ***opts_arr)
+int interpret_input(char *str, char **args_arr, char **opts_arr)
 {
     char inBuf[INPUT_MAX_LENGTH];
     // Temporary direct input - will be replaced with reading the input from the controller
@@ -77,11 +77,10 @@ int interpret_input(char **str, char ***args_arr, char ***opts_arr)
         return 0;
     }
     // Set the command variable to the command
-    *str = cmdElement->content;
+    //str = cmdElement->content;
+    strcpy(str, cmdElement->content);
     // Go to the first argument
     current_item = &args_list;
-    // Create an accessor variable for the opts array
-    char **arr_acc = *opts_arr;
     // Loop through all the optionals
     int curr_arg;
     for (curr_arg = 0; current_item != cmdElement; curr_arg++)
@@ -91,22 +90,20 @@ int interpret_input(char **str, char ***args_arr, char ***opts_arr)
             cleanup_list(&args_list);
             return 0;
         }
-        arr_acc[curr_arg] = realloc(arr_acc[curr_arg], sizeof current_item->content);
-        strcpy(arr_acc[curr_arg], current_item->content);
+        opts_arr[curr_arg] = realloc(opts_arr[curr_arg], sizeof current_item->content);
+        strcpy(opts_arr[curr_arg], current_item->content);
         current_item = current_item->next;
     }
-    arr_acc[curr_arg] = NULL;
+    opts_arr[curr_arg] = NULL;
     // Go to the first command argument in the list
     current_item = cmdElement;
-    // Set the accessor variable to the args array
-    arr_acc = *args_arr;
     for (curr_arg = 0; curr_arg < determineLength(cmdElement); curr_arg++)
     {
-        arr_acc[curr_arg] = realloc(arr_acc[curr_arg], sizeof current_item->content);
-        strcpy(arr_acc[curr_arg], current_item->content);
+        args_arr[curr_arg] = realloc(args_arr[curr_arg], sizeof current_item->content);
+        strcpy(args_arr[curr_arg], current_item->content);
         current_item = current_item->next;
     }
-    arr_acc[determineLength(cmdElement) - 1] = NULL;
+    args_arr[determineLength(cmdElement) - 1] = NULL;
     int validReturn;
     if (!strcmp(cmdElement->content, "mem") || !strcmp(cmdElement->content, "memkill"))
         validReturn = 2;

@@ -16,7 +16,7 @@ int am_overseer = 1;
 
 void term(int signum)
 {
-    printf("Caught %d, terminating...\n", signum);
+    printf("\b\bCaught %d, terminating...\n", signum);
     done = 1;
 }
 
@@ -39,19 +39,17 @@ int main(int argc, char *argv[])
     sigaction(SIGTERM, &action, NULL);
     sigaction(SIGINT, &action, NULL);
     printf("Listening on port %d\n", port);
-    char *cmd = malloc(CMD_MAX_LENGTH);
+    char cmd[CMD_MAX_LENGTH];
     // Make NULL-terminated arrays of arguments
-    char **args = malloc(MAX_ARGS);
-    args[MAX_ARGS] = NULL;
-    char **opts = malloc((MAX_OPTIONALS * 2) + 1);
-    opts[MAX_OPTIONALS * 2 + 1] = NULL;
+    char **args = calloc(MAX_ARGS, sizeof (char *));
+    char **opts = calloc((MAX_OPTIONALS * 2) + 1, sizeof (char *));
     char buf[INPUT_MAX_LENGTH];
     int valid_input = 0;
     for (; !done;)
     {
-        cmd = '\0';
         // Wait for input here
-        valid_input = interpret_input(&cmd, &args, &opts);
+        valid_input = interpret_input(cmd, args, opts);
+        if (done) break;
         Fork
         {
             // Let the child process know that it isn't the actual overseer
@@ -76,7 +74,6 @@ int main(int argc, char *argv[])
         }
         else if (valid_input == 2) // Special handlers do not fork into a new process
         {
-
             if (!strcmp(cmd, "mem"))
                 memHandler();
             else if (!strcmp(cmd, "memkill"))
@@ -85,7 +82,6 @@ int main(int argc, char *argv[])
     }
     if (am_overseer)
     {
-        free(cmd);
         cleanup_arr((void **)args);
         free(args);
         cleanup_arr((void **)opts);
