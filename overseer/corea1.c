@@ -14,11 +14,13 @@
 #define RETURNED_ERROR -1
 
 
-void getTime(struct in_addr ip){
+
+void getTime(){
     time_t timer;
     char buffer[26];
     struct tm* conTime;
-
+    char *dates= "yeet";
+    char dateFormat[11];
     timer = time(NULL);
     conTime = localtime(&timer);
         int y = conTime->tm_year+1900;
@@ -28,10 +30,36 @@ void getTime(struct in_addr ip){
         int mi = conTime->tm_min;
         int s = conTime->tm_sec;
         
-        printf("%i-%i-%i %i:%i:%i - connection received from %s\n",y,m,d,h,mi,s, inet_ntoa(ip));
-
-    
+        sprintf(dateFormat, "%i-%i-%i %i:%i:%i", y,m,d,h,mi,s);
+        dates = dateFormat;
+        printf("%s", dates);
+         
+        
+        
 }
+
+void connectionMade(struct in_addr ip){
+     
+   getTime();
+     printf(" - connection received from <%s>\n", inet_ntoa(ip));
+}
+void executeFileStart(char *fileName){
+   getTime();
+ printf(" - attempting to execute %s\n", fileName);
+}
+void executeFileFinish(char *fileName, char *pids){
+   getTime();
+ printf(" - %s has been executed with pid %s\n", fileName, pids);
+}
+void terminateFile(char *pids, char *statusCode){
+   getTime();
+ printf(" - %s  has terminated with status code %s\n", pids, statusCode);
+}
+void executeFileFail(char *fileName){
+   getTime();
+ printf(" - could not execute %s\n", fileName);
+}
+
 
 int *Receive_Array_Int_Data(int socket_identifier, int size)
 {
