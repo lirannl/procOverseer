@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <pthread.h>
 #include "inputReader.h"
 #include "handlers.h"
 
@@ -18,6 +19,11 @@ void term(int signum)
 {
     printf("\b\bCaught %d, terminating...\n", signum);
     done = 1;
+}
+
+void *executeInput(void *data)
+{
+    
 }
 
 int main(int argc, char *argv[])

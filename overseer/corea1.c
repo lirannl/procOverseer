@@ -1,7 +1,9 @@
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <sys/wait.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -13,7 +15,22 @@
 #define BACKLOG 10
 #define RETURNED_ERROR -1
 
+volatile sig_atomic_t termination_triggered = 0;
 
+void term(int signum)
+{
+    printf("\b\bCaught %d, terminating...\n", signum);
+    termination_triggered = 1;
+}
+
+void setSignals()
+{
+    struct sigaction action;
+    memset(&action, 0, sizeof(struct sigaction));
+    action.sa_handler = term;
+    sigaction(SIGTERM, &action, NULL);
+    sigaction(SIGINT, &action, NULL);
+}
 
 void getTime(){
     time_t timer;
@@ -61,12 +78,12 @@ void executeFileFail(char *fileName){
 }
 
 
-int *Receive_Array_Int_Data(int socket_identifier, int size)
+char *Receive_Array_Char_Data(int socket_identifier, int size)
 {
     int number_of_bytes, i = 0;
     uint16_t statistics;
 
-    int *results = malloc(sizeof(int) * size);
+    char *results = malloc(sizeof(int) * size);
     for (i = 0; i < size; i++)
     {
         if ((number_of_bytes = recv(socket_identifier, &statistics, sizeof(uint16_t), 0)) == RETURNED_ERROR)
@@ -78,8 +95,6 @@ int *Receive_Array_Int_Data(int socket_identifier, int size)
     }
     return results;
 }
-
-
 
 
 
@@ -148,12 +163,12 @@ int runOverseer(int port){
     //######### START UP SERVER #################
 
     //######### LISTENING #################
-    while(1){
+    while(!termination_triggered){
 
         //######## ASSIGN CONTROLLER STUFFS ###########
         sin_size = sizeof(struct sockaddr_in);
         if((newfd = accept(sockfd, (struct sockaddr*)&controller_addr, &sin_size))== -1){
-            perror("accept()");
+            if (!termination_triggered) perror("accept()");
             continue;
         }
         getTime(controller_addr.sin_addr);
@@ -164,7 +179,7 @@ int runOverseer(int port){
         { /* this is the child process */
 
             /* Call method to recieve array data */
-            int *results = Receive_Array_Int_Data(newfd, ARRAY_SIZE);
+            char *results = Receive_Array_Char_Data(newfd, ARRAY_SIZE);
 
             /* Print out the array results sent by client */
             for (i = 0; i < ARRAY_SIZE; i++)
@@ -193,8 +208,8 @@ int runOverseer(int port){
             
 
 
-    //######## CLOSE EVERYTHING #################
-    
+    //######## CLOSE EVERYTHING AND PERFORM CLEANUP #################
+
 }
 
 int main(int argc, char * argv[]) {
@@ -207,7 +222,8 @@ int main(int argc, char * argv[]) {
         printf("Invalid port number. Must be between 1 and 65535.\n");
         return 1;
     }
-    
+    setSignals();
+
     runOverseer(number);
     printf("Have a good day\n");
 }
