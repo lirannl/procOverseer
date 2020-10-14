@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <arpa/inet.h>
+#include <math.h>
 
 #define ARRAY_SIZE 30
 #define BACKLOG 10
@@ -77,13 +78,12 @@ void executeFileFail(char *fileName){
  printf(" - could not execute %s\n", fileName);
 }
 
-
-char *Receive_Array_Char_Data(int socket_identifier, int size)
+int *Receive_Array_Int_Data(int socket_identifier, int size)
 {
     int number_of_bytes, i = 0;
     uint16_t statistics;
 
-    char *results = malloc(sizeof(int) * size);
+    int *results = malloc(sizeof(int) * size);
     for (i = 0; i < size; i++)
     {
         if ((number_of_bytes = recv(socket_identifier, &statistics, sizeof(uint16_t), 0)) == RETURNED_ERROR)
@@ -95,9 +95,6 @@ char *Receive_Array_Char_Data(int socket_identifier, int size)
     }
     return results;
 }
-
-
-
 
 char *recvMessage(int fd)
 {
@@ -118,7 +115,6 @@ char *recvMessage(int fd)
 
     return msg;
 }
-
 
 int runOverseer(int port){
     printf("Overseer now listening on port: %i\n", port);
@@ -171,22 +167,16 @@ int runOverseer(int port){
             if (!termination_triggered) perror("accept()");
             continue;
         }
-        getTime(controller_addr.sin_addr);
+        connectionMade(controller_addr.sin_addr);
         
         //######## ASSIGN CONTROLLER STUFFS ###########
 
         if (!fork())
         { /* this is the child process */
 
-            /* Call method to recieve array data */
-            char *results = Receive_Array_Char_Data(newfd, ARRAY_SIZE);
-
-            /* Print out the array results sent by client */
-            for (i = 0; i < ARRAY_SIZE; i++)
-            {
-                printf("Value of index[%d] = %d\n", i, results[i]);
-            }
-
+            /* Call method to recieve array data */     
+            char *results = recvMessage(newfd);
+            printf("%s \n",results);
             free(results);
         if (send(newfd, "All of array data received by server\n", 40, 0) == -1)
                 perror("send");
@@ -197,8 +187,6 @@ int runOverseer(int port){
         {
             close(newfd); /* parent doesn't need this */
         }
-        while (waitpid(-1, NULL, WNOHANG) > 0)
-            ; /* clean up child processes */
 
 
 
@@ -206,9 +194,8 @@ int runOverseer(int port){
     //######### LISTENING #################
     
             
-
-
     //######## CLOSE EVERYTHING AND PERFORM CLEANUP #################
+
 
 }
 
@@ -223,7 +210,6 @@ int main(int argc, char * argv[]) {
         return 1;
     }
     setSignals();
-
     runOverseer(number);
     printf("Have a good day\n");
 }
