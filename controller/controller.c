@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <tclDecls.h>
 
 #define MAXDATASIZE 1000 /* max number of bytes we can get at once */
 
@@ -62,6 +63,46 @@ int main(int argc, char *argv[]) {
     printf("Message received from overseer: %s", buf);
 
     // do something to process message
+
+    // if argv > 3 have to check for -o, -log, -t
+    // then get file and collect arguments until |
+
+    // if argv is 4 and contains 'mem' it is mem [pid]
+    if (strcmp(argv[4], "mem") == 0) {
+
+    }
+
+        // else argv[4] is <file> then it is a file with no args
+    else if (argv[4] ==) {
+
+    }
+
+    // if argv is 4 and contains 'memkill' it is memkill <percent>
+    if (strcmp(argv[4], "memkill") == 0) {
+
+    }
+
+
+    // check if first one is -o
+    // if it is, check if out_file exist
+    // if you have -o need to have characters after that
+    //-o has to be first, ensure order is correct
+    // then get file name and arguments
+
+    //if you have -log something has to be after
+
+    // if you have -t must be followed by int (seconds)
+
+    // after this make sure there is a file name
+
+    // once verified pass to server
+
+    // if any of the checks fail print the --help (usage) message
+
+    // if any of the above arguments are present cant have the below arguments
+
+    // check for mem[pid]
+    // check for memkill
 
     //send back something
 
