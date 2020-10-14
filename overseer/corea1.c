@@ -183,7 +183,7 @@ int runOverseer(int port)
 
         //######## ASSIGN CONTROLLER STUFFS ###########
 
-        //Fork
+        Fork
         { /* this is the child process */
 
             /* Call method to recieve array data */
@@ -193,7 +193,7 @@ int runOverseer(int port)
             char **opts = calloc((MAX_OPTIONALS * 2) + 1, sizeof(char *));
             int valid_input = 0;
             valid_input = interpret_input(results, cmd, args, opts);
-            //Fork
+            Fork
             {
                 if (valid_input != 2)
                 {
@@ -201,8 +201,11 @@ int runOverseer(int port)
                     {
                         // Append the execs folder to the path
                         char cmdPath[CMD_MAX_LENGTH + 10];
+                        strcpy(cmdPath, "\0");
                         strcat(cmdPath, "./execs/");
                         strcat(cmdPath, cmd);
+                        printf("%s\n",cmdPath);
+                        printf("%s \n",cmd);
                         execv(cmdPath, args);
                         printf("No such executable.\n"); // If this same process is still running on the fork - no executable was run.
                     }
@@ -213,7 +216,7 @@ int runOverseer(int port)
                 }
                 exit(0);
             }
-            //else if (valid_input == 2) // Special handlers do not fork into a new process
+            else if (valid_input == 2) // Special handlers do not fork into a new process
             {
                 if (!strcmp(cmd, "mem"))
                     memHandler();
@@ -228,10 +231,10 @@ int runOverseer(int port)
             close(newfd);
             exit(0);
         }
-        /*else
-        {*/
-            //close(newfd); /* parent doesn't need this */
-        //}
+        else
+        {
+            close(newfd); /* parent doesn't need this */
+        }
     }
     //######### LISTENING #################
 
