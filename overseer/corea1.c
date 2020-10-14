@@ -37,7 +37,6 @@ void getTime(){
         
         
 }
-
 void connectionMade(struct in_addr ip){
      
    getTime();
@@ -158,14 +157,9 @@ int runOverseer(int port){
         { /* this is the child process */
 
             /* Call method to recieve array data */
-            int *results = Receive_Array_Int_Data(newfd, ARRAY_SIZE);
-
-            /* Print out the array results sent by client */
-            for (i = 0; i < ARRAY_SIZE; i++)
-            {
-                printf("Value of index[%d] = %d\n", i, results[i]);
-            }
-
+            
+            char *results = recvMessage(newfd);
+            printf("%s \n",results);
             free(results);
         if (send(newfd, "All of array data received by server\n", 40, 0) == -1)
                 perror("send");
