@@ -3,6 +3,6 @@
 
 #include "inputReader.c"
 
-int interpret_input(char*, char**, char**);
+int interpret_input(char*, char*, char**, char**);
 
 #endif

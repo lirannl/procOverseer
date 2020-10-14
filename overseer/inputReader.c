@@ -47,16 +47,10 @@ int determineLength(argList *head)
 void findCmdArg(argList **cmdPtr, argList *list);
 
 // Returns 1 if the input was successful
-int interpret_input(char *str, char **args_arr, char **opts_arr)
+int interpret_input(char *input, char *str, char **args_arr, char **opts_arr)
 {
-    char inBuf[INPUT_MAX_LENGTH];
-    // Temporary direct input - will be replaced with reading the input from the controller
-    fgets((char *__restrict)(&inBuf), INPUT_MAX_LENGTH, stdin);
-    trimEndingWhitespace(inBuf);
-    if (inBuf[0] == '\0')
-        return 0;
     argList args_list;
-    char *token = strtok(inBuf, " ");
+    char *token = strtok(input, " ");
     argList *current_item = &args_list;
     // Go through the entire string
     int num_args;
