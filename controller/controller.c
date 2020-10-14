@@ -8,11 +8,13 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#define MAXDATASIZE 100 /* max number of bytes we can get at once */
 
 int main(int argc, char* argv[]){ 
     struct hostent *he;
     struct sockaddr_in server_address;
-    int socketfd, numbytes; 
+    int socketfd, numbytes;
+    char buf[MAXDATASIZE];
     
     if (!strcmp(argv[1], "--help"))
         {
@@ -42,9 +44,25 @@ int main(int argc, char* argv[]){
 
     {
         perror("connect");
-        printf(stderr,"Coud not connect to overseer %s %s", argv[1], argv[2]);
+        printf(stderr,"Could not connect to overseer %s %s", argv[1], argv[2]);
         exit(1);
     }
 
-    return 1;
+    if ((numbytes = recv(sockfd, buf, MAXDATASIZE, 0)) == -1)
+    {
+        perror("recv");
+        printf(stderr,"Could not receive message from overseer %s", argv[]);
+        exit(1);
+    }
+
+    buf[numbytes] = '\0';
+
+    buf[numbytes] = '\0';
+
+    printf("Message received from overseer: %s", buf);
+
+    close(sockfd);
+
+    return 0;
+
 }
