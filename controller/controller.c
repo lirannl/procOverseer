@@ -61,6 +61,10 @@ int main(int argc, char *argv[]) {
 
     printf("Message received from overseer: %s", buf);
 
+    // do something to process message
+
+    //send back something
+
     close(socketfd);
 
     return 0;
