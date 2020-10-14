@@ -48,7 +48,7 @@ int main(int argc, char* argv[]){
         exit(1);
     }
 
-    if ((numbytes = recv(sockfd, buf, MAXDATASIZE, 0)) == -1)
+    if ((numbytes = recv(socketfd, buf, MAXDATASIZE, 0)) == -1)
     {
         perror("recv");
         printf(stderr,"Could not receive message from overseer %s", argv[]);
@@ -61,7 +61,7 @@ int main(int argc, char* argv[]){
 
     printf("Message received from overseer: %s", buf);
 
-    close(sockfd);
+    close(socketfd);
 
     return 0;
 
