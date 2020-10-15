@@ -188,11 +188,10 @@ int runOverseer(int port)
 
             /* Call method to recieve array data */
             char *results = recvMessage(newfd);
-            char *cmd = calloc(CMD_MAX_LENGTH, sizeof(char));
             char **args = calloc(MAX_ARGS, sizeof(char *));
             char **opts = calloc((MAX_OPTIONALS * 2) + 1, sizeof(char *));
             int valid_input = 0;
-            valid_input = interpret_input(results, cmd, args, opts);
+            valid_input = interpret_input(results, args, opts);
             Fork
             {
                 if (valid_input != 2)
@@ -201,9 +200,9 @@ int runOverseer(int port)
                     {
                         // Append the execs folder to the path
                         char cmdPath[CMD_MAX_LENGTH + 10];
-                        strcpy(cmdPath, "\0");
+                        strcpy(cmdPath, "\0"); // Clear the cmdPath var
                         strcat(cmdPath, "./execs/");
-                        strcat(cmdPath, cmd);
+                        strcat(cmdPath, args[0]);
                         execv(cmdPath, args);
                         printf("No such executable.\n"); // If this same process is still running on the fork - no executable was run.
                     }
@@ -216,9 +215,9 @@ int runOverseer(int port)
             }
             else if (valid_input == 2) // Special handlers do not fork into a new process
             {
-                if (!strcmp(cmd, "mem"))
+                if (!strcmp(args[0], "mem"))
                     memHandler();
-                else if (!strcmp(cmd, "memkill"))
+                else if (!strcmp(args[0], "memkill"))
                     memkillHandler();
             }
             free(args);

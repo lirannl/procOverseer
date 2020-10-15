@@ -47,7 +47,7 @@ int determineLength(argList *head)
 void findCmdArg(argList **cmdPtr, argList *list);
 
 // Returns 1 if the input was successful
-int interpret_input(char *input, char *str, char **args_arr, char **opts_arr)
+int interpret_input(char *input, char **args_arr, char **opts_arr)
 {
     argList args_list;
     char *token = strtok(input, " ");
@@ -72,7 +72,7 @@ int interpret_input(char *input, char *str, char **args_arr, char **opts_arr)
     }
     // Set the command variable to the command
     //str = cmdElement->content;
-    strcpy(str, cmdElement->content);
+    //strcpy(str, cmdElement->content);
     // Go to the first argument
     current_item = &args_list;
     // Loop through all the optionals
