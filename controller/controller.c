@@ -1,13 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <string.h>
 #include <netdb.h>
-#include <sys/types.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <tclDecls.h>
+#include <ctype.h>
 
 #define MAXDATASIZE 1000 /* max number of bytes we can get at once */
 
@@ -16,15 +14,18 @@ int main(int argc, char *argv[]) {
     struct hostent *he;
     struct sockaddr_in server_address;
     int socketfd, numbytes;
+    double percent;
     char buf[MAXDATASIZE];
 
     if (argc < 3) {
-        printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] | mem [pid] | memkill <percent>}\n");
+        printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] "
+               "| mem [pid] | memkill <percent>}\n");
         return 0;
     }
 
     if (!strcmp(argv[1], "--help")) {
-        printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] | mem [pid] | memkill <percent>}\n");
+        printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] "
+               "<file> [arg...] | mem [pid] | memkill <percent>}\n");
         return 0;
     }
 
@@ -67,20 +68,96 @@ int main(int argc, char *argv[]) {
     // if argv > 3 have to check for -o, -log, -t
     // then get file and collect arguments until |
 
-    // if argv is 4 and contains 'mem' it is mem [pid]
-    if (strcmp(argv[4], "mem") == 0) {
+    if (argc == 4) {
+        // if argc == 4 it can be mem or file with no args
+        // if argv is 4 and contains 'mem'
+        if (strcmp(argv[3], "mem") == 0) {
 
+        }
+
+
+    } else if (argc == 5) {
+        // can be memkill or file with 1 arg or mem with [pid]
+        // if argv is 4 and contains 'memkill' it is memkill <percent>
+        if (strcmp(argv[3], "memkill") == 0) {
+            // verify <percent> , int
+
+        } else if (strcmp(argv[3], "mem") == 0) {
+            //verify [pid]
+            int length = strlen(argv[3]);
+            for (int i = 0; i < length; i++) {
+                if (!isdigit(argv[3][i])) {
+                    printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] "
+                           "| mem [pid] | memkill <percent>}\n");
+                    return 0;
+                }
+            }
+        } else if (strcmp(argv[3], "-o") == 0 || strcmp(argv[3], "-log") == 0 || strcmp(argv[3], "-t") == 0) {
+            printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] "
+                   "| mem [pid] | memkill <percent>}\n");
+            return 0;
+        }
+    } else if (argc == 6 || argc == 7) {
+        if (strcmp(argv[3], "-o") == 0) {
+            //check that log and t does not exist
+            if (strcmp(argv[5], "-log") == 0 || strcmp(argv[5], "-t") == 0) {
+                printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] "
+                       "| mem [pid] | memkill <percent>}\n");
+                return 0;
+            }
+        } else if (strcmp(argv[3], "-log") == 0) {
+            if (strcmp(argv[5], "-o") == 0 || strcmp(argv[5], "-t") == 0) {
+                printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] "
+                       "| mem [pid] | memkill <percent>}\n");
+                return 0;
+            }
+
+        } else if (strcmp(argv[3], "-t") == 0) {
+            if (strcmp(argv[5], "-log") == 0 || strcmp(argv[5], "-o") == 0) {
+                printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] "
+                       "| mem [pid] | memkill <percent>}\n");
+                return 0;
+            }
+        }
+    } else if (argc == 8 || argc == 9) {
+        if (strcmp(argv[3], "-o") == 0) {
+
+        } else if (strcmp(argv[3], "-log") == 0) {
+            if (strcmp(argv[5], "-o") == 0) {
+                printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] "
+                       "| mem [pid] | memkill <percent>}\n");
+                return 0;
+            }
+
+        } else if (strcmp(argv[3], "-t") == 0) {
+            if (strcmp(argv[5], "-log") == 0 || strcmp(argv[5], "-o") == 0) {
+                printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] "
+                       "| mem [pid] | memkill <percent>}\n");
+                return 0;
+            }
+        }
+    }
+    else if (argc == 10 || argc == 11) {
+        if (strcmp(argv[3], "-o") == 0) {
+            if(strcmp(argv[3], "-o") == 0)
+
+        } else if (strcmp(argv[3], "-log") == 0) {
+            if (strcmp(argv[5], "-o") == 0) {
+                printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] "
+                       "| mem [pid] | memkill <percent>}\n");
+                return 0;
+            }
+
+        } else if (strcmp(argv[3], "-t") == 0) {
+            if (strcmp(argv[5], "-log") == 0 || strcmp(argv[5], "-o") == 0) {
+                printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] "
+                       "| mem [pid] | memkill <percent>}\n");
+                return 0;
+            }
+        }
     }
 
-        // else argv[4] is <file> then it is a file with no args
-    else if (argv[4] ==) {
 
-    }
-
-    // if argv is 4 and contains 'memkill' it is memkill <percent>
-    if (strcmp(argv[4], "memkill") == 0) {
-
-    }
 
 
     // check if first one is -o
