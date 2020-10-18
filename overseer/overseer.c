@@ -245,13 +245,13 @@ int main(int argc, char *argv[])
         printf("No port supplied. Please only provide a port number.\n");
         return 1;
     }
-    int number = atoi(argv[1]);
-    if (number > 65535 || number <= 0)
+    int port = atoi(argv[1]);
+    if (port > 65535 || port <= 0)
     {
         printf("Invalid port number. Must be between 1 and 65535.\n");
         return 1;
     }
     setSignals();
-    runOverseer(number);
+    runOverseer(port);
     printf("Have a good day\n");
 }
