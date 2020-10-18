@@ -11,16 +11,11 @@
 #include <time.h>
 #include <arpa/inet.h>
 #include <math.h>
-#include "inputReader.h"
-#include "handlers.h"
+#include "threadFunc.h"
 
 #define ARRAY_SIZE 30
 #define BACKLOG 10
 #define RETURNED_ERROR -1
-#define CMD_MAX_LENGTH 1000
-#define INPUT_MAX_LENGTH 10000
-#define MAX_ARGS 100
-#define MAX_OPTIONALS 3
 
 volatile sig_atomic_t termination_triggered = 0;
 
@@ -105,28 +100,6 @@ int *Receive_Array_Int_Data(int socket_identifier, int size)
     return results;
 }
 
-char *recvMessage(int fd)
-{
-    char *msg;
-    uint32_t netLen;
-    int recvLen = recv(fd, &netLen, sizeof(netLen), 0);
-    if (recvLen != sizeof(netLen))
-    {
-        fprintf(stderr, "recv got invalid length value (got %d)\n", recvLen);
-        exit(1);
-    }
-    int len = ntohl(netLen);
-    msg = malloc(len + 1);
-    if (recv(fd, msg, len, 0) != len)
-    {
-        fprintf(stderr, "recv got invalid length msg\n");
-        exit(1);
-    }
-    msg[len] = '\0';
-
-    return msg;
-}
-
 int runOverseer(int port)
 {
     printf("Overseer now listening on port: %i\n", port);
@@ -183,55 +156,15 @@ int runOverseer(int port)
 
         //######## ASSIGN CONTROLLER STUFFS ###########
 
-        Fork
-        { /* this is the child process */
-
-            /* Call method to recieve array data */
-            char *results = recvMessage(newfd);
-            char **args = calloc(MAX_ARGS, sizeof(char *));
-            char **opts = calloc((MAX_OPTIONALS * 2) + 1, sizeof(char *));
-            int valid_input = 0;
-            valid_input = interpret_input(results, args, opts);
-            Fork
-            {
-                if (valid_input != 2)
-                {
-                    if (valid_input)
-                    {
-                        // Append the execs folder to the path
-                        char cmdPath[CMD_MAX_LENGTH + 10];
-                        strcpy(cmdPath, "\0"); // Clear the cmdPath var
-                        strcat(cmdPath, "./execs/");
-                        strcat(cmdPath, args[0]);
-                        execv(cmdPath, args);
-                        printf("No such executable.\n"); // If this same process is still running on the fork - no executable was run.
-                    }
-                    else if (!valid_input)
-                    {
-                        printf("Invalid input.\n");
-                    }
-                }
-                exit(0);
-            }
-            else if (valid_input == 2) // Special handlers do not fork into a new process
-            {
-                if (!strcmp(args[0], "mem"))
-                    memHandler(args);
-                else if (!strcmp(args[0], "memkill"))
-                    memkillHandler(args);
-            }
-            free(args);
-            free(opts);
-            free(results);
-            if (send(newfd, "All of array data received by server\n", 40, 0) == -1)
-                perror("send");
-            close(newfd);
-            exit(0);
+        Fork {
+            // The data-passing struct
+            threadData dataToPass;
+            // Load data onto the struct
+            dataToPass.newfd = newfd;
+            handle_client(&dataToPass);
         }
         else
-        {
-            close(newfd); /* parent doesn't need this */
-        }
+        close(newfd); /* parent doesn't need this */
     }
     //######### LISTENING #################
 
