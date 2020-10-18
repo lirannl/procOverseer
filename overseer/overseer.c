@@ -216,9 +216,9 @@ int runOverseer(int port)
             else if (valid_input == 2) // Special handlers do not fork into a new process
             {
                 if (!strcmp(args[0], "mem"))
-                    memHandler();
+                    memHandler(args);
                 else if (!strcmp(args[0], "memkill"))
-                    memkillHandler();
+                    memkillHandler(args);
             }
             free(args);
             free(opts);

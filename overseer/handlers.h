@@ -2,8 +2,8 @@
 #define OVERSEER_HANDLERS
 #include "handlers.c"
 
-void memHandler();
+void memHandler(char **);
 
-void memkillHandler();
+void memkillHandler(char **);
 
 #endif

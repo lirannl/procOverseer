@@ -1,9 +1,9 @@
-void memHandler()
+void memHandler(char **args)
 {
     printf("This is the mem handler.\n");
 }
 
-void memkillHandler()
+void memkillHandler(char **args)
 {
     printf("This is the memkill handler.\n");
 }
