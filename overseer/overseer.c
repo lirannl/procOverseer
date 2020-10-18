@@ -11,8 +11,9 @@
 #include <time.h>
 #include <arpa/inet.h>
 #include <math.h>
+#include <pthread.h>
 #include "threadFunc.h"
-
+#include "helperMethods.h"
 #define ARRAY_SIZE 30
 #define BACKLOG 10
 #define RETURNED_ERROR -1
@@ -34,52 +35,11 @@ void setSignals()
     sigaction(SIGINT, &action, NULL);
 }
 
-void getTime()
-{
-    time_t timer;
-    char buffer[26];
-    struct tm *conTime;
-    char *dates = "yeet";
-    char dateFormat[11];
-    timer = time(NULL);
-    conTime = localtime(&timer);
-    int y = conTime->tm_year + 1900;
-    int m = conTime->tm_mon + 1;
-    int d = conTime->tm_mday;
-    int h = conTime->tm_hour;
-    int mi = conTime->tm_min;
-    int s = conTime->tm_sec;
-
-    sprintf(dateFormat, "%i-%i-%i %i:%i:%i", y, m, d, h, mi, s);
-    dates = dateFormat;
-    printf("%s", dates);
-}
-
 void connectionMade(struct in_addr ip)
 {
 
     getTime();
     printf(" - connection received from <%s>\n", inet_ntoa(ip));
-}
-void executeFileStart(char *fileName)
-{
-    getTime();
-    printf(" - attempting to execute %s\n", fileName);
-}
-void executeFileFinish(char *fileName, char *pids)
-{
-    getTime();
-    printf(" - %s has been executed with pid %s\n", fileName, pids);
-}
-void terminateFile(char *pids, char *statusCode)
-{
-    getTime();
-    printf(" - %s  has terminated with status code %s\n", pids, statusCode);
-}
-void executeFileFail(char *fileName)
-{
-    getTime();
-    printf(" - could not execute %s\n", fileName);
 }
 
 int *Receive_Array_Int_Data(int socket_identifier, int size)
@@ -138,12 +98,13 @@ int runOverseer(int port)
         perror("listen()");
         exit(1);
     }
+
+    pthread_t threadPool[THREADS_NUM];
     //######### START UP SERVER #################
 
     //######### LISTENING #################
     while (!termination_triggered)
     {
-
         //######## ASSIGN CONTROLLER STUFFS ###########
         sin_size = sizeof(struct sockaddr_in);
         if ((newfd = accept(sockfd, (struct sockaddr *)&controller_addr, &sin_size)) == -1)
@@ -155,16 +116,12 @@ int runOverseer(int port)
         connectionMade(controller_addr.sin_addr);
 
         //######## ASSIGN CONTROLLER STUFFS ###########
-
-        Fork {
-            // The data-passing struct
-            threadData dataToPass;
-            // Load data onto the struct
-            dataToPass.newfd = newfd;
-            handle_client(&dataToPass);
-        }
-        else
-        close(newfd); /* parent doesn't need this */
+        // The data-passing struct
+        threadData dataToPass;
+        // Load data onto the struct
+        dataToPass.newfd = newfd;
+        pthread_create(&threadPool[0], NULL, handle_client, &dataToPass);
+        pthread_detach(threadPool[0]);
     }
     //######### LISTENING #################
 
