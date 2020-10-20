@@ -5,6 +5,6 @@
 void executeFileStart(char *);
 void executeFileFinish(char *, int);
 void terminateFile(int, int);
-void executeFileFail(char *, FILE *log);
+void executeFileFail(char *, int);
 
 #endif

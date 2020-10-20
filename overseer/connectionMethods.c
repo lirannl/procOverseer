@@ -19,7 +19,7 @@ void terminateFile(int pid, int statusCode)
     printf("%s - %d has terminated with status code %d\n",time, pid, statusCode);
     free(time);
 }
-void executeFileFail(char *fileName, FILE * log)
+void executeFileFail(char *fileName, int log)
 {
     char *time = getTime();
     fprintf(log, "%s - could not execute %s\n",time, fileName);

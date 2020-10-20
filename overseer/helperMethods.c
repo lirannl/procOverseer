@@ -9,6 +9,8 @@ struct global {
 
 struct global *global = NULL;
 
+char selfName[CMD_MAX_LENGTH];
+
 int trimEndingWhitespace(char *string)
 {
     char finalChar = string[strlen(string) - 1];

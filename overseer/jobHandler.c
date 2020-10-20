@@ -2,6 +2,7 @@
 #include <sys/wait.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 #include <math.h>
 #include <fcntl.h>
@@ -12,7 +13,15 @@
 #include "connectionMethods.h"
 #include "requestQueue.h"
 
+struct timer_data
+{
+    int timeout;
+    pid_t pid;
+};
+
 char *recvMessage(int);
+int tHandler(char **);
+void *killProc(void *);
 
 int handle_job(int fd)
 {
@@ -27,13 +36,7 @@ int handle_job(int fd)
         fprintf(stderr, "Invalid input.\n");
         return 0;
     }
-    int timeout = 10;
-    // -t handling
-    int tIndex;
-    if (tIndex = findElemIndex(opts, "-t") != -1)
-    {
-        timeout = atoi(opts[tIndex + 1]);
-    }
+    int timeout = tHandler(opts);
     // -o handling
     int out;
     int oIndex = findElemIndex(opts, "-o");
@@ -42,11 +45,11 @@ int handle_job(int fd)
         out = open(opts[oIndex + 1], O_WRONLY | O_CREAT, 0666);
     }
     // -log handling
-    //FILE *log;
+    int log;
     int lIndex = findElemIndex(opts, "-l");
     if (lIndex != -1){
         printf("boop \n");
-        //log  = fopen(opts[lIndex+1], "a+");
+        log  = open(opts[oIndex + 1], O_WRONLY | O_CREAT, 0666);
     }
     if (valid_input == 1)
     {
@@ -55,7 +58,10 @@ int handle_job(int fd)
         strcpy(cmdPath, "\0"); // Clear the cmdPath var
         strcat(cmdPath, "./execs/");
         strcat(cmdPath, args[0]);
-        int childPid = fork();
+        int fds[2];
+        pipe(fds);
+        write(fds[1], "T", 1);
+        pid_t childPid = fork();
         if (!childPid)
         {
             executeFileStart(args[0]);
@@ -73,19 +79,26 @@ int handle_job(int fd)
             // This will only happen if the file failed to execute
             dup2(stdoutBkp, fileno(stdout));
             dup2(stderrBkp, fileno(stderr));
-            if (lIndex != -1){
-                executeFileFail(args[0], log);
-
-            }
-            else{
-                executeFileFail(args[0], stdout);
-            }
-            
+            write(fds[1], "F", 1);
+            close(fds[1]);
             exit(1);
         }
         else
         {
-            printf("PID is %d\n", childPid);
+            pthread_t timer;
+            struct timer_data tData;
+            tData.timeout = timeout;
+            tData.pid = childPid;
+            pthread_create(&timer, NULL, killProc, &tData);
+            pthread_detach(timer);
+            usleep(500);
+            char buf[3];
+            buf[2] = '\0';
+            read(fds[0], buf, 2);
+            if (!strcmp(buf, "TF")) executeFileFail(args[0], log);
+            else printf("Successfully executing %s with PID %d\n", args[0], childPid);
+            close(fds[0]);
+            close(fds[1]);
             int status;
             wait(&status);
             terminateFile(childPid, status);
@@ -99,7 +112,7 @@ int handle_job(int fd)
             memkillHandler(args);
     }
     if (lIndex != -1){
-                //fclose(log);
+                close(log);
 
             }
     free(results);
@@ -159,4 +172,30 @@ void *req_handler(void *data)
         }
     }
     printf("Quitting thread...\n");
+}
+
+int tHandler(char **opts)
+{
+    int tIndex = findElemIndex(opts, "-t");
+    if (tIndex != -1)
+    {
+        return atoi(opts[tIndex + 1]);
+    }
+    else
+        return 10;
+}
+
+void *killProc(void *data)
+{
+    struct timer_data *args = (struct timer_data *)data;
+    sleep(args->timeout);
+    if (kill(args->pid, 0) == -1) return NULL;
+    kill(args->pid, SIGTERM);
+    printf("Sent a sigterm\n");
+    sleep(5);
+    if (kill(args->pid, 0) != -1)
+    {
+        kill(args->pid, SIGKILL);
+        printf("Sent a sigkill\n");
+    }
 }
