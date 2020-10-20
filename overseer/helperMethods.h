@@ -11,6 +11,7 @@
 int trimEndingWhitespace(char *);
 void cleanup_arr(void **);
 int findElemIndex(char **, char *);
+void freeStrArr(char **);
 void getTime();
 
 #define Fork if(!fork())

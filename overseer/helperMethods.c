@@ -53,3 +53,11 @@ void getTime()
     dates = dateFormat;
     printf("%s", dates);
 }
+
+void freeStrArr(char **strArr)
+{
+    for (int i = 0; strArr[i] != NULL; i++)
+    {
+        free(strArr[i]);
+    }
+}

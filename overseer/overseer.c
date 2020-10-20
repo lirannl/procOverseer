@@ -12,7 +12,7 @@
 #include <arpa/inet.h>
 #include <math.h>
 #include <pthread.h>
-#include "threadFunc.h"
+#include "jobHandler.h"
 #include "helperMethods.h"
 #define ARRAY_SIZE 30
 #define BACKLOG 10

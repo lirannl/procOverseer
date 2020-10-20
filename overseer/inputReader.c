@@ -4,125 +4,81 @@
 #include <string.h>
 #include "helperMethods.h"
 
-#ifndef CMD_MAX_LENGTH
-#define CMD_MAX_LENGTH 1000
-#endif
-
-#ifndef INPUT_MAX_LENGTH
-#define INPUT_MAX_LENGTH 10000
-#endif
-
-#ifndef MAX_ARGS
-#define MAX_ARGS 100
-#endif
-
-#ifndef MAX_OPTIONALS
-#define MAX_OPTIONALS 3
-#endif
-
-typedef struct strNode
+// Follow the array up until NULL and return its length (excluding the final NULL)
+int determineLength(char **arr)
 {
-    char content[CMD_MAX_LENGTH];
-    struct strNode *next;
-} argList;
-
-// Free the memory allocated to the list
-void cleanup_list(argList *head)
-{
+    int i;
+    for (i = 0; arr[i] != NULL; i++){}
+    return i;
 }
 
-// Follow the list up until NULL and return its length (excluding the final NULL)
-int determineLength(argList *head)
-{
-    int length = 1;
-    while (head != NULL)
-    {
-        length++;
-        head = head->next;
-    }
-    return length - 1;
-}
 
 // Finds the first non '-'-headed argument and sets a pointer to it
-void findCmdArg(argList **cmdPtr, argList *list);
+int findCmdArg(char**);
 
 // Returns 1 if the input was successful
 int interpret_input(char *input, char **args_arr, char **opts_arr)
 {
-    argList args_list;
+    char *split_input[MAX_ARGS];
     char *token = strtok(input, " ");
-    argList *current_item = &args_list;
     // Go through the entire string
     int num_args;
     for (num_args = 0; token != NULL; num_args++)
     {
         // Copy the current token into the list
-        strcpy(current_item->content, token);
-        argList *newItem = malloc(sizeof *newItem);
-        current_item->next = newItem;
+        split_input[num_args] = (char*)malloc(strlen(token));
+        strcpy(split_input[num_args], token);
         token = strtok(NULL, " ");
-        current_item = current_item->next; // Go to the next item
     }
-    argList *cmdElement = NULL;
-    findCmdArg(&cmdElement, &args_list);
-    if (cmdElement == NULL || !strcmp(cmdElement->content, ""))
+    split_input[num_args] = NULL; // Set the last item's next to NULL
+    int cmdElement = findCmdArg(split_input);
+    if (split_input[cmdElement] == NULL || !strcmp(split_input[cmdElement], ""))
     {
-        cleanup_list(&args_list);
+        freeStrArr(split_input);
         return 0;
     }
-    // Set the command variable to the command
-    //str = cmdElement->content;
-    //strcpy(str, cmdElement->content);
-    // Go to the first argument
-    current_item = &args_list;
+    char **opts = opts_arr;
+    char **args = args_arr;
     // Loop through all the optionals
     int curr_arg;
-    for (curr_arg = 0; current_item != cmdElement; curr_arg++)
+    for (curr_arg = 0; curr_arg < cmdElement; curr_arg++)
     {
-        if (curr_arg >= MAX_OPTIONALS * 2)
-        {
-            cleanup_list(&args_list);
-            return 0;
-        }
-        opts_arr[curr_arg] = realloc(opts_arr[curr_arg], sizeof current_item->content);
-        strcpy(opts_arr[curr_arg], current_item->content);
-        current_item = current_item->next;
+        if (curr_arg >= MAX_OPTIONALS * 2) return 0;
+        opts[curr_arg] = (char *)malloc(strlen(split_input[curr_arg]));
+        strcpy(opts[curr_arg], split_input[curr_arg]);
     }
-    opts_arr[curr_arg] = NULL;
-    // Go to the first command argument in the list
-    current_item = cmdElement;
-    for (curr_arg = 0; curr_arg < determineLength(cmdElement); curr_arg++)
+    opts[curr_arg] = NULL;
+    for (curr_arg = 0; curr_arg < determineLength(&split_input[cmdElement]); curr_arg++)
     {
-        args_arr[curr_arg] = realloc(args_arr[curr_arg], sizeof current_item->content);
-        strcpy(args_arr[curr_arg], current_item->content);
-        current_item = current_item->next;
+        args[curr_arg] = (char *)malloc(strlen(split_input[cmdElement + curr_arg]));
+        strcpy(args[curr_arg], split_input[cmdElement + curr_arg]);
     }
-    args_arr[determineLength(cmdElement) - 1] = NULL;
+    args[curr_arg] = NULL;
     int validReturn;
-    if (!strcmp(cmdElement->content, "mem") || !strcmp(cmdElement->content, "memkill"))
+    if (!strcmp(split_input[cmdElement], "mem") || !strcmp(split_input[cmdElement], "memkill"))
         validReturn = 2;
     else
         validReturn = 1;
-    cleanup_list(&args_list);
+    freeStrArr(split_input);
     return validReturn;
 }
 
-void findCmdArg(argList **cmdPtr, argList *list)
+// returns the position of the command arg, or -1 if there isn't one
+int findCmdArg(char **split_input)
 {
     // Set this to 1 to ignore the next argument
     int ignoreArg = 0;
-    // Start searching from element 0
-    *cmdPtr = list;
-    while (*cmdPtr != NULL)
+    int i;
+    for (i = 0; split_input[i] != NULL; i++)
     {
-        if ((*cmdPtr)->content[0] == '-')
+        if (split_input[i][0] == '-')
         {
             if (!ignoreArg)
                 ignoreArg = 1;
             else
             {
                 // invalid input
-                *cmdPtr = NULL;
+                i = -1;
                 break;
             }
         }
@@ -135,6 +91,6 @@ void findCmdArg(argList **cmdPtr, argList *list)
             else
                 ignoreArg = 0;
         }
-        *cmdPtr = (*cmdPtr)->next;
     }
+    return i;
 }

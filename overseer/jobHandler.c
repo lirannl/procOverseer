@@ -11,64 +11,6 @@
 #include "inputReader.h"
 #include "connectionMethods.h"
 
-pthread_mutex_t request_mutex;
-
-pthread_cond_t got_request;
-
-int num_requests = 0;
-
-struct request
-{
-    int number;
-    char message[INPUT_MAX_LENGTH];
-    struct request *next;
-};
-
-struct request *requests = NULL;
-struct request *last_req = NULL;
-
-void add_request(int request_num,
-                 pthread_mutex_t *p_mutex,
-                 pthread_cond_t *p_cond_var)
-{
-    struct request *a_request; /* pointer to newly added request.     */
-
-    /* create structure with new request */
-    a_request = (struct request *)malloc(sizeof(struct request));
-    if (!a_request)
-    { /* malloc failed?? */
-        fprintf(stderr, "add_request: out of memory\n");
-        exit(1);
-    }
-    a_request->number = request_num;
-    a_request->next = NULL;
-
-    /* lock the mutex, to assure exclusive access to the list */
-    pthread_mutex_lock(p_mutex);
-
-    /* add new request to the end of the list, updating list */
-    /* pointers as required */
-    if (num_requests == 0)
-    { /* special case - list is empty */
-        requests = a_request;
-        last_req = a_request;
-    }
-    else
-    {
-        last_req->next = a_request;
-        last_req = a_request;
-    }
-
-    /* increase total number of pending requests by one. */
-    num_requests++;
-
-    /* unlock mutex */
-    pthread_mutex_unlock(&request_mutex);
-
-    /* signal the condition variable - there's a new request to handle */
-    pthread_cond_signal(&got_request);
-}
-
 // Data that gets passed into the function
 typedef struct
 {
@@ -82,8 +24,8 @@ void *handle_client(void *data)
     threadData *passedData = (threadData *)data;
     /* Call method to recieve array data */
     char *results = recvMessage(passedData->newfd);
-    char **args = calloc(MAX_ARGS, sizeof(char *));
-    char **opts = calloc((MAX_OPTIONALS * 2) + 1, sizeof(char *));
+    char *args[MAX_ARGS];
+    char *opts[(MAX_OPTIONALS * 2) + 1];
     int valid_input = 0;
     valid_input = interpret_input(results, args, opts);
     if (!valid_input)
@@ -141,8 +83,6 @@ void *handle_client(void *data)
         else if (!strcmp(args[0], "memkill"))
             memkillHandler(args);
     }
-    free(args);
-    free(opts);
     free(results);
     if (send(passedData->newfd, "All of array data received by server\n", 40, 0) == -1)
         perror("send");
@@ -161,7 +101,7 @@ char *recvMessage(int fd)
         exit(1);
     }
     int len = ntohl(netLen);
-    msg = malloc(len + 1);
+    msg = (char*)malloc(len + 1);
     if (recv(fd, msg, len, 0) != len)
     {
         fprintf(stderr, "recv got invalid length msg\n");
