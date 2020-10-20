@@ -2,6 +2,7 @@
 #include <sys/wait.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 #include <math.h>
 #include <fcntl.h>
@@ -12,8 +13,15 @@
 #include "connectionMethods.h"
 #include "requestQueue.h"
 
+struct timer_data
+{
+    int timeout;
+    pid_t pid;
+};
+
 char *recvMessage(int);
 int tHandler(char **);
+void *killProc(void *);
 
 int handle_job(int fd)
 {
@@ -44,7 +52,7 @@ int handle_job(int fd)
         strcpy(cmdPath, "\0"); // Clear the cmdPath var
         strcat(cmdPath, "./execs/");
         strcat(cmdPath, args[0]);
-        int childPid = fork();
+        pid_t childPid = fork();
         if (!childPid)
         {
             executeFileStart(args[0]);
@@ -67,6 +75,12 @@ int handle_job(int fd)
         }
         else
         {
+            pthread_t timer;
+            struct timer_data tData;
+            tData.timeout = timeout;
+            tData.pid = childPid;
+            pthread_create(&timer, NULL, killProc, &tData);
+            pthread_detach(timer);
             printf("PID is %d\n", childPid);
             int status;
             wait(&status);
@@ -141,10 +155,25 @@ void *req_handler(void *data)
 
 int tHandler(char **opts)
 {
-    int tIndex;
-    if (tIndex = findElemIndex(opts, "-t") != -1)
+    int tIndex = findElemIndex(opts, "-t");
+    if (tIndex != -1)
     {
         return atoi(opts[tIndex + 1]);
     }
-    else return 10;
+    else
+        return 10;
+}
+
+void *killProc(void *data)
+{
+    struct timer_data *args = (struct timer_data *)data;
+    sleep(args->timeout);
+    kill(args->pid, SIGTERM);
+    printf("Sent a sigterm\n");
+    sleep(5);
+    if (kill(args->pid, 0) != -1)
+    {
+        kill(args->pid, SIGKILL);
+        printf("Sent a sigkill\n");
+    }
 }
