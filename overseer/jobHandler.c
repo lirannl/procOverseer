@@ -52,6 +52,9 @@ int handle_job(int fd)
         strcpy(cmdPath, "\0"); // Clear the cmdPath var
         strcat(cmdPath, "./execs/");
         strcat(cmdPath, args[0]);
+        int fds[2];
+        pipe(fds);
+        write(fds[1], "T", 1);
         pid_t childPid = fork();
         if (!childPid)
         {
@@ -70,7 +73,8 @@ int handle_job(int fd)
             // This will only happen if the file failed to execute
             dup2(stdoutBkp, fileno(stdout));
             dup2(stderrBkp, fileno(stderr));
-            executeFileFail(args[0]);
+            write(fds[1], "F", 1);
+            close(fds[1]);
             exit(1);
         }
         else
@@ -81,7 +85,14 @@ int handle_job(int fd)
             tData.pid = childPid;
             pthread_create(&timer, NULL, killProc, &tData);
             pthread_detach(timer);
-            printf("PID is %d\n", childPid);
+            usleep(500);
+            char buf[3];
+            buf[2] = '\0';
+            read(fds[0], buf, 2);
+            if (!strcmp(buf, "TF")) executeFileFail(args[0]);
+            else printf("Successfully executing %s with PID %d\n", args[0], childPid);
+            close(fds[0]);
+            close(fds[1]);
             int status;
             wait(&status);
             terminateFile(childPid, status);
