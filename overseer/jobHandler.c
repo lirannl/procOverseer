@@ -168,6 +168,7 @@ void *killProc(void *data)
 {
     struct timer_data *args = (struct timer_data *)data;
     sleep(args->timeout);
+    if (kill(args->pid, 0) == -1) return NULL;
     kill(args->pid, SIGTERM);
     printf("Sent a sigterm\n");
     sleep(5);
