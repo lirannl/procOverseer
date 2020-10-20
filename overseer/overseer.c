@@ -14,11 +14,11 @@
 #include <pthread.h>
 #include "jobHandler.h"
 #include "helperMethods.h"
+#include "requestQueue.h"
 #define ARRAY_SIZE 30
 #define BACKLOG 10
 #define RETURNED_ERROR -1
-
-volatile sig_atomic_t termination_triggered = 0;
+#define NUM_THREADS 5
 
 void term(int signum)
 {
@@ -99,7 +99,11 @@ int runOverseer(int port)
         exit(1);
     }
 
-    pthread_t threadPool[THREADS_NUM];
+    pthread_t threadPool[NUM_THREADS];
+    int threadIds[NUM_THREADS];
+    
+    for (int i = 0; i < NUM_THREADS; i++) threadIds[i] = pthread_create(&threadPool[i], NULL, req_handler, (void *)&threadIds[i]);
+    
     //######### START UP SERVER #################
 
     //######### LISTENING #################
@@ -115,15 +119,8 @@ int runOverseer(int port)
         }
         connectionMade(controller_addr.sin_addr);
 
-        //######## ASSIGN CONTROLLER STUFFS ###########
-        // The data-passing struct
-        threadData dataToPass;
-        // Load data onto the struct
-        dataToPass.newfd = newfd;
-        pthread_create(&threadPool[0], NULL, handle_job, &dataToPass);
-        pthread_detach(threadPool[0]);
+        add_request(newfd, &request_mutex, &got_request);
     }
-    //######### LISTENING #################
 
     //######## CLOSE EVERYTHING AND PERFORM CLEANUP #################
 }
@@ -141,6 +138,8 @@ int main(int argc, char *argv[])
         printf("Invalid port number. Must be between 1 and 65535.\n");
         return 1;
     }
+    pthread_mutex_init(&request_mutex, NULL);
+    pthread_cond_init(&got_request, NULL);
     setSignals();
     runOverseer(port);
     printf("Have a good day\n");

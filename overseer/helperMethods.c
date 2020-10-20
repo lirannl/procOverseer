@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+volatile sig_atomic_t termination_triggered = 0;
+
 int trimEndingWhitespace(char *string)
 {
     char finalChar = string[strlen(string) - 1];

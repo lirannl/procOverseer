@@ -1,7 +1,7 @@
 #ifndef jobHandler
 #define jobHandler
 
-void *handle_job(void *);
+void *req_handler(void *);
 #include "jobHandler.c"
 
 #endif

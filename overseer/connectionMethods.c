@@ -1,4 +1,5 @@
 #include "helperMethods.h"
+#include <stdio.h>
 
 void executeFileStart(char *fileName)
 {

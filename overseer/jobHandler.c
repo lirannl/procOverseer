@@ -10,20 +10,14 @@
 #include "handlers.h"
 #include "inputReader.h"
 #include "connectionMethods.h"
-
-// Data that gets passed into the function
-typedef struct
-{
-    int newfd;
-} threadData;
+#include "requestQueue.h"
 
 char *recvMessage(int);
 
-void *handle_job(void *data)
-{ /* this is the child process */
-    threadData *passedData = (threadData *)data;
+int handle_job(int fd)
+{
     /* Call method to recieve array data */
-    char *results = recvMessage(passedData->newfd);
+    char *results = recvMessage(fd);
     char *args[MAX_ARGS];
     char *opts[(MAX_OPTIONALS * 2) + 1];
     int valid_input = 0;
@@ -84,9 +78,9 @@ void *handle_job(void *data)
             memkillHandler(args);
     }
     free(results);
-    if (send(passedData->newfd, "All of array data received by server\n", 40, 0) == -1)
+    if (send(fd, "All of array data received by server\n", 40, 0) == -1)
         perror("send");
-    close(passedData->newfd);
+    close(fd);
     return 0;
 }
 
@@ -110,4 +104,39 @@ char *recvMessage(int fd)
     msg[len] = '\0';
 
     return msg;
+}
+
+void *req_handler(void *data)
+{
+    struct request *a_request;      /* pointer to a request.               */
+    int thread_id = *((int *)data); /* thread identifying number           */
+
+    /* lock the mutex, to access the requests list exclusively. */
+    pthread_mutex_lock(&request_mutex);
+
+    /* do forever.... */
+    while (!termination_triggered)
+    {
+        if (num_requests > 0)
+        { /* a request is pending */
+            a_request = get_request();
+            if (a_request)
+            { /* got a request - handle it and free it */
+                //TO DO - UNLOCCK MUTEX, CALL FUNCTION TO HANDLE REQUEST AND RELOCK MUTEX
+                pthread_mutex_unlock(&request_mutex);
+                handle_job(a_request->fd);
+                pthread_mutex_lock(&request_mutex);
+            }
+        }
+        else
+        {
+            /* wait for a request to arrive. note the mutex will be */
+            /* unlocked here, thus allowing other threads access to */
+            /* requests list.                                       */
+
+            pthread_cond_wait(&got_request, &request_mutex);
+            /* and after we return from pthread_cond_wait, the mutex  */
+            /* is locked again, so we don't need to lock it ourselves */
+        }
+    }
 }
