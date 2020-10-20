@@ -57,7 +57,7 @@ void getTime()
     int mi = conTime->tm_min;
     int s = conTime->tm_sec;
 
-    sprintf(dateFormat, "%i-%i-%i %i:%i:%i", y, m, d, h, mi, s);
+    snprintf(dateFormat, 6, "%i-%i-%i %i:%i:%i", y, m, d, h, mi, s);
     dates = dateFormat;
     printf("%s", dates);
 }
