@@ -39,12 +39,13 @@ int findElemIndex(char **str_arr, char *target)
     return -1; // Not found
 }
 
-void getTime()
+char *getTime()
 {
     time_t timer;
     char buffer[26];
     struct tm *conTime;
-    char *dates = "yeet";
+    char *dates;
+    char *thing;
     char dateFormat[11];
     timer = time(NULL);
     conTime = localtime(&timer);
@@ -55,9 +56,12 @@ void getTime()
     int mi = conTime->tm_min;
     int s = conTime->tm_sec;
 
-    sprintf(dateFormat, "%i-%i-%i %i:%i:%i", y, m, d, h, mi, s);
-    dates = dateFormat;
-    printf("%s", dates);
+    sprintf(dateFormat, "%d-%d-%d %d:%d:%d", y, m, d, h, mi, s);
+    //printf("%s", dates);
+    
+    dates = malloc(sizeof(char) * strlen(dateFormat));
+    strcpy(dates, dateFormat);
+    return dates;
 }
 
 void freeStrArr(char **strArr)

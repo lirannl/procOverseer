@@ -42,6 +42,12 @@ int handle_job(int fd)
         out = open(opts[oIndex + 1], O_WRONLY | O_CREAT, 0666);
     }
     // -log handling
+    //FILE *log;
+    int lIndex = findElemIndex(opts, "-l");
+    if (lIndex != -1){
+        printf("boop \n");
+        //log  = fopen(opts[lIndex+1], "a+");
+    }
     if (valid_input == 1)
     {
         // Append the execs folder to the path
@@ -67,7 +73,14 @@ int handle_job(int fd)
             // This will only happen if the file failed to execute
             dup2(stdoutBkp, fileno(stdout));
             dup2(stderrBkp, fileno(stderr));
-            executeFileFail(args[0]);
+            if (lIndex != -1){
+                executeFileFail(args[0], log);
+
+            }
+            else{
+                executeFileFail(args[0], stdout);
+            }
+            
             exit(1);
         }
         else
@@ -85,6 +98,10 @@ int handle_job(int fd)
         else if (!strcmp(args[0], "memkill"))
             memkillHandler(args);
     }
+    if (lIndex != -1){
+                //fclose(log);
+
+            }
     free(results);
     if (send(fd, "All of array data received by server\n", 40, 0) == -1)
         perror("send");

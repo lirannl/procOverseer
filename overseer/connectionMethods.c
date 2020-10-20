@@ -3,21 +3,25 @@
 
 void executeFileStart(char *fileName)
 {
-    getTime();
-    printf(" - attempting to execute %s\n", fileName);
+    char *time = getTime();
+    printf( "%s - attempting to execute %s\n",time, fileName);
+    free(time);
 }
 void executeFileFinish(char *fileName, int pid)
 {
-    getTime();
-    printf(" - %s has been executed with pid %d\n", fileName, pid);
+    char *time = getTime();
+    printf("%s - %s has been executed with pid %d\n",time, fileName, pid);
+    free(time);
 }
 void terminateFile(int pid, int statusCode)
 {
-    getTime();
-    printf(" - %d has terminated with status code %d\n", pid, statusCode);
+    char *time = getTime();
+    printf("%s - %d has terminated with status code %d\n",time, pid, statusCode);
+    free(time);
 }
-void executeFileFail(char *fileName)
+void executeFileFail(char *fileName, FILE * log)
 {
-    getTime();
-    printf(" - could not execute %s\n", fileName);
+    char *time = getTime();
+    fprintf(log, "%s - could not execute %s\n",time, fileName);
+    free(time);
 }
