@@ -45,11 +45,10 @@ int handle_job(int fd)
         out = open(opts[oIndex + 1], O_WRONLY | O_CREAT, 0666);
     }
     // -log handling
-    int log;
+    int log = fileno(stdout);
     int lIndex = findElemIndex(opts, "-l");
     if (lIndex != -1){
-        printf("boop \n");
-        log  = open(opts[oIndex + 1], O_WRONLY | O_CREAT, 0666);
+        log  = open(opts[lIndex + 1], O_WRONLY | O_CREAT, 0666);
     }
     if (valid_input == 1)
     {
@@ -64,7 +63,7 @@ int handle_job(int fd)
         pid_t childPid = fork();
         if (!childPid)
         {
-            executeFileStart(args[0]);
+            executeFileStart(args[0], log);
             int stdoutBkp;
             int stderrBkp;
             dup2(fileno(stdout), stdoutBkp);
@@ -96,12 +95,12 @@ int handle_job(int fd)
             buf[2] = '\0';
             read(fds[0], buf, 2);
             if (!strcmp(buf, "TF")) executeFileFail(args[0], log);
-            else printf("Successfully executing %s with PID %d\n", args[0], childPid);
+            else dprintf(log, "Successfully executing %s with PID %d\n", args[0], childPid);
             close(fds[0]);
             close(fds[1]);
             int status;
             wait(&status);
-            terminateFile(childPid, status);
+            terminateFile(childPid, status, log);
         }
     }
     if (valid_input == 2) // Special handlers do not fork into a new process
