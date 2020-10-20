@@ -2,6 +2,7 @@
 #include <sys/wait.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 #include <math.h>
 #include <fcntl.h>
@@ -12,7 +13,15 @@
 #include "connectionMethods.h"
 #include "requestQueue.h"
 
+struct timer_data
+{
+    int timeout;
+    pid_t pid;
+};
+
 char *recvMessage(int);
+int tHandler(char **);
+void *killProc(void *);
 
 int handle_job(int fd)
 {
@@ -27,6 +36,7 @@ int handle_job(int fd)
         fprintf(stderr, "Invalid input.\n");
         return 0;
     }
+    int timeout = tHandler(opts);
     // -o handling
     int out;
     int oIndex = findElemIndex(opts, "-o");
@@ -34,6 +44,7 @@ int handle_job(int fd)
     {
         out = open(opts[oIndex + 1], O_WRONLY | O_CREAT, 0666);
     }
+    // -log handling
     if (valid_input == 1)
     {
         // Append the execs folder to the path
@@ -41,7 +52,7 @@ int handle_job(int fd)
         strcpy(cmdPath, "\0"); // Clear the cmdPath var
         strcat(cmdPath, "./execs/");
         strcat(cmdPath, args[0]);
-        int childPid = fork();
+        pid_t childPid = fork();
         if (!childPid)
         {
             executeFileStart(args[0]);
@@ -63,7 +74,13 @@ int handle_job(int fd)
             exit(1);
         }
         else
-        {   
+        {
+            pthread_t timer;
+            struct timer_data tData;
+            tData.timeout = timeout;
+            tData.pid = childPid;
+            pthread_create(&timer, NULL, killProc, &tData);
+            pthread_detach(timer);
             printf("PID is %d\n", childPid);
             int status;
             wait(&status);
@@ -95,7 +112,7 @@ char *recvMessage(int fd)
         exit(1);
     }
     int len = ntohl(netLen);
-    msg = (char*)malloc(len + 1);
+    msg = (char *)malloc(len + 1);
     if (recv(fd, msg, len, 0) != len)
     {
         fprintf(stderr, "recv got invalid length msg\n");
@@ -109,7 +126,7 @@ char *recvMessage(int fd)
 void *req_handler(void *data)
 {
     struct request *a_request;
-    struct global *globalData = (struct global*)data;
+    struct global *globalData = (struct global *)data;
 
     /* lock the mutex, to access the requests list exclusively. */
     pthread_mutex_lock(&request_mutex);
@@ -134,4 +151,29 @@ void *req_handler(void *data)
         }
     }
     printf("Quitting thread...\n");
+}
+
+int tHandler(char **opts)
+{
+    int tIndex = findElemIndex(opts, "-t");
+    if (tIndex != -1)
+    {
+        return atoi(opts[tIndex + 1]);
+    }
+    else
+        return 10;
+}
+
+void *killProc(void *data)
+{
+    struct timer_data *args = (struct timer_data *)data;
+    sleep(args->timeout);
+    kill(args->pid, SIGTERM);
+    printf("Sent a sigterm\n");
+    sleep(5);
+    if (kill(args->pid, 0) != -1)
+    {
+        kill(args->pid, SIGKILL);
+        printf("Sent a sigkill\n");
+    }
 }
