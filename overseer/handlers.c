@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 void memHandler(char **args)
 {
     printf("This is the mem handler.\n");

@@ -19,7 +19,7 @@ typedef struct
 
 char *recvMessage(int);
 
-void *handle_client(void *data)
+void *handle_job(void *data)
 { /* this is the child process */
     threadData *passedData = (threadData *)data;
     /* Call method to recieve array data */

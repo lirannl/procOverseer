@@ -1,7 +1,7 @@
 #ifndef jobHandler
 #define jobHandler
 
-void *handle_client(void *);
+void *handle_job(void *);
 #include "jobHandler.c"
 
 #endif

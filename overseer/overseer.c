@@ -120,7 +120,7 @@ int runOverseer(int port)
         threadData dataToPass;
         // Load data onto the struct
         dataToPass.newfd = newfd;
-        pthread_create(&threadPool[0], NULL, handle_client, &dataToPass);
+        pthread_create(&threadPool[0], NULL, handle_job, &dataToPass);
         pthread_detach(threadPool[0]);
     }
     //######### LISTENING #################
