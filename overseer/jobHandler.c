@@ -62,7 +62,7 @@ int handle_job(int fd)
             executeFileFail(args[0]);
             exit(1);
         }
-        else //
+        else
         {   
             printf("PID is %d\n", childPid);
             int status;
@@ -108,17 +108,16 @@ char *recvMessage(int fd)
 
 void *req_handler(void *data)
 {
-    struct request *a_request;      /* pointer to a request.               */
-    int thread_id = *((int *)data); /* thread identifying number           */
+    struct request *a_request;
+    struct global *globalData = (struct global*)data;
 
     /* lock the mutex, to access the requests list exclusively. */
     pthread_mutex_lock(&request_mutex);
 
-    /* do forever.... */
-    while (!termination_triggered)
+    while (!globalData->termination_triggered)
     {
         if (num_requests > 0)
-        { /* a request is pending */
+        {
             a_request = get_request();
             if (a_request)
             { /* got a request - handle it and free it */
@@ -134,4 +133,5 @@ void *req_handler(void *data)
             pthread_cond_wait(&got_request, &request_mutex);
         }
     }
+    printf("Quitting thread...\n");
 }

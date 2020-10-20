@@ -23,7 +23,7 @@
 void term(int signum)
 {
     printf("\b\bCaught %d, terminating...\n", signum);
-    termination_triggered = 1;
+    global->termination_triggered = 1;
 }
 
 void setSignals()
@@ -102,18 +102,18 @@ int runOverseer(int port)
     pthread_t threadPool[NUM_THREADS];
     int threadIds[NUM_THREADS];
     
-    for (int i = 0; i < NUM_THREADS; i++) threadIds[i] = pthread_create(&threadPool[i], NULL, req_handler, (void *)&threadIds[i]);
+    for (int i = 0; i < NUM_THREADS; i++) threadIds[i] = pthread_create(&threadPool[i], NULL, req_handler, (void *)global);
     
     //######### START UP SERVER #################
 
     //######### LISTENING #################
-    while (!termination_triggered)
+    while (!global->termination_triggered)
     {
         //######## ASSIGN CONTROLLER STUFFS ###########
         sin_size = sizeof(struct sockaddr_in);
         if ((newfd = accept(sockfd, (struct sockaddr *)&controller_addr, &sin_size)) == -1)
         {
-            if (!termination_triggered)
+            if (!global->termination_triggered)
                 perror("accept()");
             continue;
         }
@@ -123,6 +123,10 @@ int runOverseer(int port)
     }
 
     //######## CLOSE EVERYTHING AND PERFORM CLEANUP #################
+    for (int i = 0; i < NUM_THREADS; i++)
+    {
+        //pthread_join(threadPool[i], NULL);
+    }
 }
 
 int main(int argc, char *argv[])
@@ -138,9 +142,12 @@ int main(int argc, char *argv[])
         printf("Invalid port number. Must be between 1 and 65535.\n");
         return 1;
     }
+    global = malloc(sizeof (struct global));
+    global->termination_triggered = 0;
     pthread_mutex_init(&request_mutex, NULL);
     pthread_cond_init(&got_request, NULL);
     setSignals();
     runOverseer(port);
+    free(global);
     printf("Have a good day\n");
 }

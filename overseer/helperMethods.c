@@ -3,7 +3,11 @@
 #include <stdlib.h>
 #include <time.h>
 
-volatile sig_atomic_t termination_triggered = 0;
+struct global {
+    volatile int termination_triggered;
+};
+
+struct global *global = NULL;
 
 int trimEndingWhitespace(char *string)
 {
