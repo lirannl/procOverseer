@@ -125,18 +125,13 @@ void *req_handler(void *data)
                 //TO DO - UNLOCCK MUTEX, CALL FUNCTION TO HANDLE REQUEST AND RELOCK MUTEX
                 pthread_mutex_unlock(&request_mutex);
                 handle_job(a_request->fd);
+                free(a_request);
                 pthread_mutex_lock(&request_mutex);
             }
         }
         else
         {
-            /* wait for a request to arrive. note the mutex will be */
-            /* unlocked here, thus allowing other threads access to */
-            /* requests list.                                       */
-
             pthread_cond_wait(&got_request, &request_mutex);
-            /* and after we return from pthread_cond_wait, the mutex  */
-            /* is locked again, so we don't need to lock it ourselves */
         }
     }
 }
