@@ -13,6 +13,7 @@
 #include "requestQueue.h"
 
 char *recvMessage(int);
+int tHandler(char **);
 
 int handle_job(int fd)
 {
@@ -27,13 +28,7 @@ int handle_job(int fd)
         fprintf(stderr, "Invalid input.\n");
         return 0;
     }
-    int timeout = 10;
-    // -t handling
-    int tIndex;
-    if (tIndex = findElemIndex(opts, "-t") != -1)
-    {
-        timeout = atoi(opts[tIndex + 1]);
-    }
+    int timeout = tHandler(opts);
     // -o handling
     int out;
     int oIndex = findElemIndex(opts, "-o");
@@ -142,4 +137,14 @@ void *req_handler(void *data)
         }
     }
     printf("Quitting thread...\n");
+}
+
+int tHandler(char **opts)
+{
+    int tIndex;
+    if (tIndex = findElemIndex(opts, "-t") != -1)
+    {
+        return atoi(opts[tIndex + 1]);
+    }
+    else return 10;
 }
