@@ -27,6 +27,13 @@ int handle_job(int fd)
         fprintf(stderr, "Invalid input.\n");
         return 0;
     }
+    int timeout = 10;
+    // -t handling
+    int tIndex;
+    if (tIndex = findElemIndex(opts, "-t") != -1)
+    {
+        timeout = atoi(opts[tIndex + 1]);
+    }
     // -o handling
     int out;
     int oIndex = findElemIndex(opts, "-o");
@@ -34,6 +41,7 @@ int handle_job(int fd)
     {
         out = open(opts[oIndex + 1], O_WRONLY | O_CREAT, 0666);
     }
+    // -log handling
     if (valid_input == 1)
     {
         // Append the execs folder to the path
@@ -63,7 +71,7 @@ int handle_job(int fd)
             exit(1);
         }
         else
-        {   
+        {
             printf("PID is %d\n", childPid);
             int status;
             wait(&status);
@@ -95,7 +103,7 @@ char *recvMessage(int fd)
         exit(1);
     }
     int len = ntohl(netLen);
-    msg = (char*)malloc(len + 1);
+    msg = (char *)malloc(len + 1);
     if (recv(fd, msg, len, 0) != len)
     {
         fprintf(stderr, "recv got invalid length msg\n");
@@ -109,7 +117,7 @@ char *recvMessage(int fd)
 void *req_handler(void *data)
 {
     struct request *a_request;
-    struct global *globalData = (struct global*)data;
+    struct global *globalData = (struct global *)data;
 
     /* lock the mutex, to access the requests list exclusively. */
     pthread_mutex_lock(&request_mutex);
