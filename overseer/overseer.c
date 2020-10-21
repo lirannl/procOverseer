@@ -38,8 +38,9 @@ void setSignals()
 void connectionMade(struct in_addr ip)
 {
 
-    getTime();
-    printf(" - connection received from <%s>\n", inet_ntoa(ip));
+    char * time = getTime();
+    printf("%s - connection received from %s\n", time, inet_ntoa(ip));
+    free(time);
 }
 
 int *Receive_Array_Int_Data(int socket_identifier, int size)

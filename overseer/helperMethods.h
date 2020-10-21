@@ -13,6 +13,7 @@ void cleanup_arr(void **);
 int findElemIndex(char **, char *);
 void freeStrArr(char **);
 char *getTime();
+char *uniteStrArr(char **);
 
 #define Fork if(!fork())
 

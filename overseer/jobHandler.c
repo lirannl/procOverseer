@@ -16,6 +16,7 @@
 struct timer_data
 {
     int timeout;
+    int logfd;
     pid_t pid;
 };
 
@@ -50,6 +51,7 @@ int handle_job(int fd)
     if (lIndex != -1){
         log  = open(opts[lIndex + 1], O_WRONLY | O_CREAT, 0666);
     }
+    char *fullExec = uniteStrArr(args);
     if (valid_input == 1)
     {
         // Append the execs folder to the path
@@ -63,7 +65,8 @@ int handle_job(int fd)
         pid_t childPid = fork();
         if (!childPid)
         {
-            executeFileStart(args[0], log);
+            executeFileStart(fullExec, log);
+            free(fullExec);
             int stdoutBkp;
             int stderrBkp;
             dup2(fileno(stdout), stdoutBkp);
@@ -78,6 +81,7 @@ int handle_job(int fd)
             // This will only happen if the file failed to execute
             dup2(stdoutBkp, fileno(stdout));
             dup2(stderrBkp, fileno(stderr));
+            printf("FAILURE!");
             write(fds[1], "F", 1);
             close(fds[1]);
             exit(1);
@@ -87,20 +91,24 @@ int handle_job(int fd)
             pthread_t timer;
             struct timer_data tData;
             tData.timeout = timeout;
+            tData.logfd = log;
             tData.pid = childPid;
             pthread_create(&timer, NULL, killProc, &tData);
             pthread_detach(timer);
-            usleep(500);
+            usleep(800);
             char buf[3];
             buf[2] = '\0';
             read(fds[0], buf, 2);
-            if (!strcmp(buf, "TF")) executeFileFail(args[0], log);
-            else dprintf(log, "Successfully executing %s with PID %d\n", args[0], childPid);
+            int success = strcmp(buf, "TF") != 0;
+            if (success) executeFileFinish(fullExec, childPid, log);
+            dprintf(fds[1], "TTT"); // Flush the pipe by writing 3 Ts, to prevent false-failures
             close(fds[0]);
             close(fds[1]);
             int status;
             wait(&status);
-            terminateFile(childPid, status, log);
+            if (success) terminateFile(childPid, status, log);
+            else executeFileFail(fullExec, log);
+            free(fullExec);
         }
     }
     if (valid_input == 2) // Special handlers do not fork into a new process
@@ -190,11 +198,11 @@ void *killProc(void *data)
     sleep(args->timeout);
     if (kill(args->pid, 0) == -1) return NULL;
     kill(args->pid, SIGTERM);
-    printf("Sent a sigterm\n");
+    logSig(args->pid, "SIGTERM", args->logfd);
     sleep(5);
     if (kill(args->pid, 0) != -1)
     {
         kill(args->pid, SIGKILL);
-        printf("Sent a sigkill\n");
+        logSig(args->pid, "SIGKILL", args->logfd);
     }
 }
