@@ -48,8 +48,9 @@ int handle_job(int fd)
     // -log handling
     int log = fileno(stdout);
     int lIndex = findElemIndex(opts, "-l");
-    if (lIndex != -1){
-        log  = open(opts[lIndex + 1], O_WRONLY | O_CREAT, 0666);
+    if (lIndex != -1)
+    {
+        log = open(opts[lIndex + 1], O_WRONLY | O_CREAT, 0666);
     }
     char *fullExec = uniteStrArr(args);
     if (valid_input == 1)
@@ -81,7 +82,6 @@ int handle_job(int fd)
             // This will only happen if the file failed to execute
             dup2(stdoutBkp, fileno(stdout));
             dup2(stderrBkp, fileno(stderr));
-            printf("FAILURE!");
             write(fds[1], "F", 1);
             close(fds[1]);
             exit(1);
@@ -100,14 +100,17 @@ int handle_job(int fd)
             buf[2] = '\0';
             read(fds[0], buf, 2);
             int success = strcmp(buf, "TF") != 0;
-            if (success) executeFileFinish(fullExec, childPid, log);
+            if (success)
+                executeFileFinish(fullExec, childPid, log);
             dprintf(fds[1], "TTT"); // Flush the pipe by writing 3 Ts, to prevent false-failures
             close(fds[0]);
             close(fds[1]);
             int status;
             wait(&status);
-            if (success) terminateFile(childPid, status, log);
-            else executeFileFail(fullExec, log);
+            if (success)
+                terminateFile(childPid, status, log);
+            else
+                executeFileFail(fullExec, log);
             free(fullExec);
         }
     }
@@ -118,10 +121,10 @@ int handle_job(int fd)
         else if (!strcmp(args[0], "memkill"))
             memkillHandler(args);
     }
-    if (lIndex != -1){
-                close(log);
-
-            }
+    if (lIndex != -1)
+    {
+        close(log);
+    }
     free(results);
     if (send(fd, "All of array data received by server\n", 40, 0) == -1)
         perror("send");
@@ -196,7 +199,8 @@ void *killProc(void *data)
 {
     struct timer_data *args = (struct timer_data *)data;
     sleep(args->timeout);
-    if (kill(args->pid, 0) == -1) return NULL;
+    if (kill(args->pid, 0) == -1)
+        return NULL;
     kill(args->pid, SIGTERM);
     logSig(args->pid, "SIGTERM", args->logfd);
     sleep(5);

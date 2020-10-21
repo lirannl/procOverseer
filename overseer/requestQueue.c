@@ -22,7 +22,8 @@ void add_request(int fd, pthread_mutex_t *p_mutex, pthread_cond_t *p_cond_var)
 
     a_request = (struct request *)malloc(sizeof(struct request));
     if (!a_request)
-    { /* malloc failed?? */
+    {
+        // Malloc failure
         fprintf(stderr, "add_request: out of memory\n");
         exit(1);
     }

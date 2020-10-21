@@ -100,9 +100,9 @@ int runOverseer(int port)
         exit(1);
     }
 
+    //######## CREATE THREADPOOL #############
     pthread_t threadPool[NUM_THREADS];
     int threadIds[NUM_THREADS];
-    
     for (int i = 0; i < NUM_THREADS; i++) threadIds[i] = pthread_create(&threadPool[i], NULL, req_handler, (void *)global);
     
     //######### START UP SERVER #################
@@ -118,8 +118,8 @@ int runOverseer(int port)
                 perror("accept()");
             continue;
         }
+        // Log the connection
         connectionMade(controller_addr.sin_addr);
-
         add_request(newfd, &request_mutex, &got_request);
     }
 
@@ -132,6 +132,7 @@ int runOverseer(int port)
 
 int main(int argc, char *argv[])
 {
+    // Launch arg validation
     if (argc != 2)
     {
         printf("No port supplied. Please only provide a port number.\n");
