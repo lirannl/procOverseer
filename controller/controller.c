@@ -29,40 +29,6 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    if ((he = gethostbyname(argv[1])) == NULL) { /* get the host info */
-        herror("gethostbyname");
-        exit(1);
-    }
-
-    if ((socketfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-        perror("socket");
-        exit(1);
-    }
-    /* clear address struct */
-
-    memset(&server_address, 0, sizeof(server_address));
-
-    server_address.sin_family = AF_INET;            /* host byte order */
-    server_address.sin_port = htons(atoi(argv[2])); /* short, network byte order */
-    server_address.sin_addr = *((struct in_addr *) he->h_addr);
-
-    if (connect(socketfd, (struct sockaddr *) &server_address,
-                sizeof(struct sockaddr)) == -1) {
-        fprintf(stderr, "Could not connect to overseer %s %s", argv[1], argv[2]);
-        exit(1);
-    }
-
-    if ((numbytes = recv(socketfd, buf, MAXDATASIZE, 0)) == -1) {
-        fprintf(stderr, "Could not receive message from overseer");
-        exit(1);
-    }
-
-    buf[numbytes] = '\0';
-
-    buf[numbytes] = '\0';
-
-    printf("Message received from overseer: %s", buf);
-
     // do something to process message
 
     // if argv > 3 have to check for -o, -log, -t
@@ -72,7 +38,7 @@ int main(int argc, char *argv[]) {
         // if argc == 4 it can be mem or file with no args
         // if argv is 4 and contains 'mem'
         if (strcmp(argv[3], "mem") == 0) {
-
+            fprintf(stdout, "mem");
         }
 
 
@@ -136,10 +102,11 @@ int main(int argc, char *argv[]) {
                 return 0;
             }
         }
-    }
-    else if (argc == 10 || argc == 11) {
+    } else if (argc == 10 || argc == 11) {
         if (strcmp(argv[3], "-o") == 0) {
-            if(strcmp(argv[3], "-o") == 0)
+            if (strcmp(argv[3], "-o") == 0) {
+
+            }
 
         } else if (strcmp(argv[3], "-log") == 0) {
             if (strcmp(argv[5], "-o") == 0) {
@@ -156,6 +123,58 @@ int main(int argc, char *argv[]) {
             }
         }
     }
+
+    if ((he = gethostbyname(argv[1])) == NULL) { /* get the host info */
+        herror("gethostbyname");
+        exit(1);
+    }
+
+    if ((socketfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        perror("socket");
+        exit(1);
+    }
+    /* clear address struct */
+
+    memset(&server_address, 0, sizeof(server_address));
+
+    server_address.sin_family = AF_INET;            /* host byte order */
+    server_address.sin_port = htons(atoi(argv[2])); /* short, network byte order */
+    server_address.sin_addr = *((struct in_addr *) he->h_addr);
+
+    if (connect(socketfd, (struct sockaddr *) &server_address,
+                sizeof(struct sockaddr)) == -1) {
+        fprintf(stderr, "Could not connect to overseer %s %s", argv[1], argv[2]);
+        exit(1);
+    }
+
+    // convert agv to one big string, then send to server
+    char output_message[10000];
+    for (int i = 0; i < argc - 3; i++) {
+        if (i == 0) {
+            strcpy(output_message, argv[i + 3]);
+        } else {
+            strcat(output_message, argv[i + 3]);
+        }
+    }
+
+    fprintf(stdout, "Message to server: %s \n", output_message);
+
+    //Send some data
+    if (send(socketfd, output_message, strlen(output_message), 0) < 0) {
+        puts("Send failed");
+        return 1;
+    }
+
+//    if ((numbytes = recv(socketfd, buf, MAXDATASIZE, 0)) == -1) {
+//        fprintf(stderr, "Could not receive message from overseer");
+//        exit(1);
+//    }
+//
+//    buf[numbytes] = '\0';
+//
+//    buf[numbytes] = '\0';
+//
+//    printf("Message received from overseer: %s", buf);
 
     close(socketfd);
 
