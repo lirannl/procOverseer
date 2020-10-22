@@ -34,6 +34,8 @@ int handle_job(int fd) {
     valid_input = interpret_input(results, args, opts);
     if (!valid_input) {
         fprintf(stderr, "Invalid input.\n");
+        dprintf(fd, results);
+        close(fd);
         return 0;
     }
     int timeout = tHandler(opts);
