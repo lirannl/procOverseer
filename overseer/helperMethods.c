@@ -65,7 +65,6 @@ char *getTime()
 {
     time_t timer;
     struct tm *conTime;
-    char *dates;
     char dateFormat[DATEBUF_SIZE];
     timer = time(NULL);
     conTime = localtime(&timer);
@@ -77,9 +76,7 @@ char *getTime()
     int s = conTime->tm_sec;
 
     snprintf(dateFormat, DATEBUF_SIZE, "%d-%02d-%02d %02d:%02d:%02d", y, m, d, h, mi, s);
-    //printf("%s", dates);
-
-    dates = malloc(sizeof(char) * strlen(dateFormat));
+    char *dates = malloc(sizeof(char) * strlen(dateFormat));
     strcpy(dates, dateFormat);
     return dates;
 }
