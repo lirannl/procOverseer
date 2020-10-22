@@ -43,14 +43,14 @@ int handle_job(int fd)
     int oIndex = findElemIndex(opts, "-o");
     if (oIndex != -1)
     {
-        out = open(opts[oIndex + 1], O_WRONLY | O_CREAT, 0666);
+        out = open(opts[oIndex + 1], O_WRONLY | O_APPEND, 0666);
     }
     // -log handling
     int log = fileno(stdout);
-    int lIndex = findElemIndex(opts, "-l");
+    int lIndex = findElemIndex(opts, "-log");
     if (lIndex != -1)
     {
-        log = open(opts[lIndex + 1], O_WRONLY | O_CREAT, 0666);
+        log = open(opts[lIndex + 1], O_WRONLY | O_APPEND, 0666);
     }
     char *fullExec = uniteStrArr(args);
     if (valid_input == 1)
@@ -95,7 +95,7 @@ int handle_job(int fd)
             tData.pid = childPid;
             pthread_create(&timer, NULL, killProc, &tData);
             pthread_detach(timer);
-            usleep(800);
+            usleep(1600);
             char buf[3];
             buf[2] = '\0';
             read(fds[0], buf, 2);
