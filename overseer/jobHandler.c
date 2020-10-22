@@ -41,13 +41,13 @@ int handle_job(int fd) {
     int out;
     int oIndex = findElemIndex(opts, "-o");
     if (oIndex != -1) {
-        out = open(opts[oIndex + 1], O_WRONLY | O_CREAT, 0666);
+        out = open(opts[oIndex + 1], O_WRONLY | O_APPEND | O_CREAT, 0666);
     }
     // -log handling
     int log = fileno(stdout);
     int lIndex = findElemIndex(opts, "-l");
     if (lIndex != -1) {
-        log = open(opts[lIndex + 1], O_WRONLY | O_CREAT, 0666);
+        log = open(opts[lIndex + 1], O_WRONLY | O_APPEND | O_CREAT, 0666);
     }
     char *fullExec = uniteStrArr(args);
     if (valid_input == 1) {
