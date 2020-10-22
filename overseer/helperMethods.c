@@ -60,14 +60,12 @@ char *uniteStrArr(char **strArr)
     return out;
 }
 
+#define DATEBUF_SIZE 20
 char *getTime()
 {
     time_t timer;
-    char buffer[26];
     struct tm *conTime;
-    char *dates;
-    char *thing;
-    char dateFormat[11];
+    char dateFormat[DATEBUF_SIZE];
     timer = time(NULL);
     conTime = localtime(&timer);
     int y = conTime->tm_year + 1900;
@@ -77,10 +75,8 @@ char *getTime()
     int mi = conTime->tm_min;
     int s = conTime->tm_sec;
 
-    sprintf(dateFormat, "%d-%02d-%02d %02d:%02d:%02d", y, m, d, h, mi, s);
-    //printf("%s", dates);
-
-    dates = malloc(sizeof(char) * strlen(dateFormat));
+    snprintf(dateFormat, DATEBUF_SIZE, "%d-%02d-%02d %02d:%02d:%02d", y, m, d, h, mi, s);
+    char *dates = malloc(sizeof(char) * strlen(dateFormat));
     strcpy(dates, dateFormat);
     return dates;
 }
