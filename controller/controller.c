@@ -9,6 +9,13 @@
 
 #define MAXDATASIZE 1000 /* max number of bytes we can get at once */
 
+void sendMessage(int, const char *);
+
+void printHelp()
+{
+    printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] "
+               "| mem [pid] | memkill <percent>}\n");
+}
 
 int main(int argc, char *argv[]) {
     struct hostent *he;
@@ -18,14 +25,12 @@ int main(int argc, char *argv[]) {
     char buf[MAXDATASIZE];
 
     if (argc < 3) {
-        printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] "
-               "| mem [pid] | memkill <percent>}\n");
+        printHelp();
         return 0;
     }
 
     if (!strcmp(argv[1], "--help")) {
-        printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] "
-               "<file> [arg...] | mem [pid] | memkill <percent>}\n");
+        printHelp();
         return 0;
     }
 
@@ -143,7 +148,7 @@ int main(int argc, char *argv[]) {
 
     if (connect(socketfd, (struct sockaddr *) &server_address,
                 sizeof(struct sockaddr)) == -1) {
-        fprintf(stderr, "Could not connect to overseer %s %s", argv[1], argv[2]);
+        fprintf(stderr, "Could not connect to overseer %s %s\n", argv[1], argv[2]);
         exit(1);
     }
 
@@ -153,31 +158,42 @@ int main(int argc, char *argv[]) {
         if (i == 0) {
             strcpy(output_message, argv[i + 3]);
         } else {
+            strcat(output_message, " ");
             strcat(output_message, argv[i + 3]);
         }
     }
 
+    if (strlen(output_message) < 1) {printf("No command provided\n"); exit(1);}
+
     fprintf(stdout, "Message to server: %s \n", output_message);
 
     //Send some data
-    if (send(socketfd, output_message, strlen(output_message), 0) < 0) {
-        puts("Send failed");
-        return 1;
-    }
+    sendMessage(socketfd, output_message);
 
-//    if ((numbytes = recv(socketfd, buf, MAXDATASIZE, 0)) == -1) {
-//        fprintf(stderr, "Could not receive message from overseer");
-//        exit(1);
-//    }
-//
-//    buf[numbytes] = '\0';
-//
-//    buf[numbytes] = '\0';
-//
-//    printf("Message received from overseer: %s", buf);
+   if ((numbytes = recv(socketfd, buf, MAXDATASIZE, 0)) == -1) {
+       fprintf(stderr, "Could not receive message from overseer");
+       exit(1);
+   }
+
+   buf[numbytes] = '\0';
+
+   buf[numbytes] = '\0';
+
+   printf("Message received from overseer: %s", buf);
 
     close(socketfd);
 
     return 0;
 
+}
+
+void sendMessage(int fd, const char *msg)
+{
+    int len = strlen(msg);
+    uint32_t netLen = htonl(len);
+    send(fd, &netLen, sizeof(netLen), 0);
+    if (send(fd, msg, len, 0) != len) {
+        fprintf(stderr, "Failed to send\n");
+        exit(1);
+    }
 }
