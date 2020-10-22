@@ -47,7 +47,7 @@ int handle_job(int fd) {
     }
     // -log handling
     int log = fileno(stdout);
-    int lIndex = findElemIndex(opts, "-l");
+    int lIndex = findElemIndex(opts, "-log");
     if (lIndex != -1) {
         log = open(opts[lIndex + 1], O_WRONLY | O_APPEND | O_CREAT, 0666);
     }
@@ -99,6 +99,7 @@ int handle_job(int fd) {
             dprintf(fds[1], "TTT"); // Flush the pipe by writing 3 Ts, to prevent false-failures
             close(fds[0]);
             close(fds[1]);
+            // WRITE childPid TO PID ARRAY HERE
             int status;
             wait(&status);
             if (success)
