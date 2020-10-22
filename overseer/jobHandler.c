@@ -87,7 +87,7 @@ int handle_job(int fd) {
             tData.pid = childPid;
             pthread_create(&timer, NULL, killProc, &tData);
             pthread_detach(timer);
-            usleep(800);
+            usleep(1600);
             char buf[3];
             buf[2] = '\0';
             read(fds[0], buf, 2);
