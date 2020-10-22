@@ -133,7 +133,6 @@ char *recvMessage(int fd) {
         fprintf(stderr, "recv got invalid length value (got %d)\n", recvLen);
         exit(1);
     } else {
-        printf("%s", chunk);
         msg = malloc(sizeof(chunk) + 1);
         for (int i = 0; i < recvLen; i++) {
             msg[i] = chunk[i];

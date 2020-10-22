@@ -12,8 +12,7 @@ int main(int argc, char *argv[]) {
     srand(time(NULL));
     int sleepPoint = rand() % 8192;
     int sheep = 1;
-    while (sheep < sleepPoint)
-    {
+    while (sheep < sleepPoint) {
         printf("%d sheep, ", sheep);
         sheep++;
     }
