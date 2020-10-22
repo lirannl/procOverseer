@@ -46,9 +46,8 @@ int main(int argc, char *argv[])
     {
         // if argc == 4 it can be mem or file with no args
         // if argv is 4 and contains 'mem'
-        if (strcmp(argv[3], "mem") == 0)
-        {
-            fprintf(stdout, "mem");
+        if (strcmp(argv[3], "mem") == 0) {
+            fprintf(stdout, "mem\n");
         }
     }
     else if (argc == 5)
