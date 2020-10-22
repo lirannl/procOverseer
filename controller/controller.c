@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
         // if argc == 4 it can be mem or file with no args
         // if argv is 4 and contains 'mem'
         if (strcmp(argv[3], "mem") == 0) {
-            fprintf(stdout, "mem");
+            fprintf(stdout, "mem\n");
         }
 
 
@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
     }
 
     // convert agv to one big string, then send to server
-    char output_message[10000];
+    char output_message[1000];
     for (int i = 0; i < argc - 3; i++) {
         if (i == 0) {
             strcpy(output_message, argv[i + 3]);
