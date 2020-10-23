@@ -6,132 +6,129 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <stdbool.h>
+#include <regex.h>
+#include <arpa/inet.h>
 
 #define MAXDATASIZE 1000 /* max number of bytes we can get at once */
 
-void sendMessage(int, const char *);
 
-void printHelp() {
-    printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] "
-           "| mem [pid] | memkill <percent>}\n");
+bool check_valid_host();
+
+bool check_valid_port(char *string);
+
+bool check_valid_percent(char *string);
+
+bool check_for_flag(char *string);
+
+bool check_valid_int(char *string);
+
+void print_help(FILE *output) {
+    fprintf(output, "Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] "
+                    "| mem [pid] | memkill <percent>}\n");
 }
 
 int main(int argc, char *argv[]) {
     struct hostent *he;
     struct sockaddr_in server_address;
     int socketfd, numbytes;
-    double percent;
     char buf[MAXDATASIZE];
 
-    if (argc < 3) {
-        printHelp();
+    if (argc > 1 && strcmp(argv[1], "--help") == 0) {
+        print_help(stdout);
         return 0;
     }
 
-    if (!strcmp(argv[1], "--help")) {
-        printHelp();
+    if (argc < 4) {
+        print_help(stderr);
         return 0;
     }
 
-    // do something to process message
-
-    // if argv > 3 have to check for -o, -log, -t
-    // then get file and collect arguments until |
+    if (!check_valid_host(argv[1]) || !check_valid_port(argv[2])) {
+        print_help(stderr);
+        return 0;
+    }
 
     if (argc == 4) {
-        // if argc == 4 it can be mem or file with no args
-        // if argv is 4 and contains 'mem'
-        if (strcmp(argv[3], "mem") == 0) {
-            fprintf(stdout, "mem\n");
+        if (strcmp(argv[3], "mem") != 0 || check_for_flag(argv[3])) {
+            print_help(stderr);
+            return 0;
         }
-    } else if (argc == 5) {
-        // can be memkill or file with 1 arg or mem with [pid]
-        // if argv is 4 and contains 'memkill' it is memkill <percent>
-        if (strcmp(argv[3], "memkill") == 0) {
-            // verify <percent> , int
-        } else if (strcmp(argv[3], "mem") == 0) {
-            //verify [pid]
-            int length = strlen(argv[3]);
-            for (int i = 0; i < length; i++) {
-                if (!isdigit(argv[3][i])) {
-                    printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] "
-                           "| mem [pid] | memkill <percent>}\n");
+    }
+
+    if (argc == 5) {
+        if (strcmp(argv[3], "mem") == 0) {
+            if (!check_valid_int(argv[4])) {
+                print_help(stderr);
+                return 0;
+            }
+        } else if (strcmp(argv[3], "memkill") == 0) {
+            if (!check_valid_percent(argv[4])) {
+                print_help(stderr);
+                return 0;
+            }
+        } else if (check_for_flag(argv[3])) {
+            print_help(stderr);
+            return 0;
+        } else {
+            print_help(stderr);
+            return 0;
+        }
+    }
+
+
+    bool outfile_found, logfile_found, time_found;
+    outfile_found = 0;
+    logfile_found = 0;
+    time_found = 0;
+
+    if (argc >= 6) {
+        for (int i = 3; i < argc; i++) {
+            if (i == 3 && !check_for_flag(argv[i])) {
+                break;
+            } else if (strcmp(argv[i], "-o") == 0) {
+                if (!outfile_found && i == 3 && i + 2 < argc && !check_for_flag(argv[i + 1])) {
+                    outfile_found = 1;
+                } else {
+                    print_help(stderr);
+                    return 0;
+                }
+            } else if (strcmp(argv[i], "-log") == 0) {
+                if (!logfile_found && ((outfile_found && i == 5) || i == 3) && i + 2 < argc &&
+                    !check_for_flag(argv[i + 1])) {
+                    logfile_found = 1;
+
+                } else {
+                    print_help(stderr);
+                    return 0;
+                }
+            } else if (strcmp(argv[i], "-t") == 0) {
+                if (!time_found && (i == 3 || ((outfile_found || logfile_found) && i == 5) ||
+                                    (outfile_found && logfile_found && i == 7)) &&
+                    (i + 2 < argc && check_valid_int(argv[i + 1]))) {
+                    time_found = 1;
+                } else {
+                    print_help(stderr);
                     return 0;
                 }
             }
-        } else if (strcmp(argv[3], "-o") == 0 || strcmp(argv[3], "-log") == 0 || strcmp(argv[3], "-t") == 0) {
-            printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] "
-                   "| mem [pid] | memkill <percent>}\n");
-            return 0;
-        }
-    } else if (argc == 6 || argc == 7) {
-        if (strcmp(argv[3], "-o") == 0) {
-            //check that log and t does not exist
-            if (strcmp(argv[5], "-log") == 0 || strcmp(argv[5], "-t") == 0) {
-                printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] "
-                       "| mem [pid] | memkill <percent>}\n");
-                return 0;
-            }
-        } else if (strcmp(argv[3], "-log") == 0) {
-            if (strcmp(argv[5], "-o") == 0 || strcmp(argv[5], "-t") == 0) {
-                printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] "
-                       "| mem [pid] | memkill <percent>}\n");
-                return 0;
-            }
-        } else if (strcmp(argv[3], "-t") == 0) {
-            if (strcmp(argv[5], "-log") == 0 || strcmp(argv[5], "-o") == 0) {
-                printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] "
-                       "| mem [pid] | memkill <percent>}\n");
-                return 0;
-            }
-        }
-    } else if (argc == 8 || argc == 9) {
-        if (strcmp(argv[3], "-o") == 0) {
-        } else if (strcmp(argv[3], "-log") == 0) {
-            if (strcmp(argv[5], "-o") == 0) {
-                printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] "
-                       "| mem [pid] | memkill <percent>}\n");
-                return 0;
-            }
-        } else if (strcmp(argv[3], "-t") == 0) {
-            if (strcmp(argv[5], "-log") == 0 || strcmp(argv[5], "-o") == 0) {
-                printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] "
-                       "| mem [pid] | memkill <percent>}\n");
-                return 0;
-            }
-        }
-    } else if (argc == 10 || argc == 11) {
-        if (strcmp(argv[3], "-o") == 0) {
-            if (strcmp(argv[3], "-o") == 0) {
-            }
-        } else if (strcmp(argv[3], "-log") == 0) {
-            if (strcmp(argv[5], "-o") == 0) {
-                printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] "
-                       "| mem [pid] | memkill <percent>}\n");
-                return 0;
-            }
-        } else if (strcmp(argv[3], "-t") == 0) {
-            if (strcmp(argv[5], "-log") == 0 || strcmp(argv[5], "-o") == 0) {
-                printf("Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] "
-                       "| mem [pid] | memkill <percent>}\n");
-                return 0;
-            }
         }
     }
 
-    // convert agv to one big string, then send to server
     char output_message[10000];
-    for (int i = 0; i < argc - 3; i++) {
+    memset(output_message, '\0', sizeof(char) * 1000);
+
+    for (int i = 3; i < argc; i++) {
         if (i == 0) {
-            strcpy(output_message, argv[i + 3]);
+            strcpy(output_message, argv[i]);
         } else {
             strcat(output_message, " ");
-            strcat(output_message, argv[i + 3]);
+            strcat(output_message, argv[i]);
         }
     }
 
     if (!strlen(output_message)) {
-        printHelp();
+        print_help(stderr);
         exit(1);
     }
 
@@ -166,8 +163,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-//    sendMessage(socketfd, output_message);
-
     if ((numbytes = recv(socketfd, buf, MAXDATASIZE, 0)) == -1) {
         fprintf(stderr, "Could not receive message from overseer");
         close(socketfd);
@@ -185,11 +180,44 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-void sendMessage(int fd, const char *msg) {
-    int len = strlen(msg);
-    uint32_t netLen = htonl(len);
-    if (send(fd, msg, len, 0) != len) {
-        fprintf(stderr, "Failed to send\n");
-        exit(1);
+bool check_valid_int(char *string) {
+    u_long length = strlen(string);
+    for (int i = 0; i < length; i++) {
+        if (!isdigit(string[i])) {
+            return 0;
+        }
     }
+    return 1;
+}
+
+bool check_for_flag(char *string) {
+    return strcmp(string, "-o") == 0 || strcmp(string, "-log") == 0 || strcmp(string, "-t") == 0;
+}
+
+bool check_valid_percent(char *string) {
+    u_long length = strlen(string);
+    bool found_decimal = 0;
+
+    for (int i = 0; i < length; i++) {
+        if ((string[i] == '.' && !found_decimal)) {
+            found_decimal = 1;
+        } else if (!isdigit(string[i])) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+bool check_valid_port(char *string) {
+    if (!check_valid_int(string)) {
+        return 0;
+    }
+    char *ptr;
+    long port = strtol(string, &ptr, 10);
+    return 1 <= port && port <= 65535;
+}
+
+bool check_valid_host(char *string) {
+    struct in_addr addr = {0};
+    return inet_pton(AF_INET, string, &addr) != 1;
 }

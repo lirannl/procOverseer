@@ -16,9 +16,9 @@
 pthread_mutex_t pidMutex = PTHREAD_MUTEX_INITIALIZER;
 pid_t *pidChild;
 
-void pidChildArray(int num_threads, pid_t *pidChildPointer){
+void pidChildArray(int num_threads, pid_t *pidChildPointer) {
     pidChild = pidChildPointer;
-    pidChild = malloc(sizeof(pid_t)*num_threads);
+    pidChild = malloc(sizeof(pid_t) * num_threads);
 
 }
 
@@ -112,12 +112,12 @@ int handle_job(int fd) {
             close(fds[1]);
             // WRITE childPid TO PID ARRAY HERE
             pthread_mutex_lock(&pidMutex);
-                for (int i = 0; i<5;i++){
-                    if (pidChild[i]==0){
-                        pidChild[i] = getpid();
-                        break;
-                    }
+            for (int i = 0; i < 5; i++) {
+                if (pidChild[i] == 0) {
+                    pidChild[i] = getpid();
+                    break;
                 }
+            }
             pthread_mutex_unlock(&pidMutex);
             int status;
             wait(&status);
