@@ -13,7 +13,7 @@
 #include "connectionMethods.h"
 #include "requestQueue.h"
 
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t pidMutex = PTHREAD_MUTEX_INITIALIZER;
 pid_t *pidChild;
 
 void pidChildArray(int num_threads, pid_t *pidChildPointer){
@@ -111,14 +111,14 @@ int handle_job(int fd) {
             close(fds[0]);
             close(fds[1]);
             // WRITE childPid TO PID ARRAY HERE
-            pthread_mutex_lock(&mutex);
+            pthread_mutex_lock(&pidMutex);
                 for (int i = 0; i<5;i++){
                     if (pidChild[i]==0){
                         pidChild[i] = getpid();
                         break;
                     }
                 }
-            pthread_mutex_unlock(&mutex);
+            pthread_mutex_unlock(&pidMutex);
             int status;
             wait(&status);
             if (success)
