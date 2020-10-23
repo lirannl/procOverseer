@@ -13,6 +13,15 @@
 #include "connectionMethods.h"
 #include "requestQueue.h"
 
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pid_t *pidChild;
+
+void pidChildArray(int num_threads, pid_t *pidChildPointer){
+    pidChild = pidChildPointer;
+    pidChild = malloc(sizeof(pid_t)*num_threads);
+
+}
+
 struct timer_data {
     int timeout;
     int logfd;
@@ -26,6 +35,8 @@ int tHandler(char **);
 void *killProc(void *);
 
 int handle_job(int fd) {
+    //#####start the pidChild array####
+    pidChildArray(5, pidChild);
     /* Call method to recieve array data */
     char *results = recvMessage(fd);
     char *args[MAX_ARGS];
@@ -100,6 +111,14 @@ int handle_job(int fd) {
             close(fds[0]);
             close(fds[1]);
             // WRITE childPid TO PID ARRAY HERE
+            pthread_mutex_lock(&mutex);
+                for (int i = 0; i<5;i++){
+                    if (pidChild[i]==0){
+                        pidChild[i] = getpid();
+                        break;
+                    }
+                }
+            pthread_mutex_unlock(&mutex);
             int status;
             wait(&status);
             if (success)
@@ -107,6 +126,8 @@ int handle_job(int fd) {
             else
                 executeFileFail(fullExec, log);
             free(fullExec);
+            //#####FREE pidChild array####
+            free(pidChild);
         }
     }
     if (valid_input == 2) // Special handlers do not fork into a new process
