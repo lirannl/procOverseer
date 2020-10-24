@@ -5,7 +5,7 @@
 #define INPUT_MAX_LENGTH 10000
 #define MAX_ARGS 100
 #define MAX_OPTIONALS 3
-#define THREADS_NUM 5
+#define NUM_THREADS 5
 
 #include "helperMethods.c"
 

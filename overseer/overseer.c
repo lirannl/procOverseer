@@ -15,7 +15,6 @@
 
 #define BACKLOG 10
 #define RETURNED_ERROR -1
-#define NUM_THREADS 5
 
 void term(int signum)
 {
@@ -89,7 +88,7 @@ int runOverseer(int port)
         threadIds[i] = pthread_create(&threadPool[i], NULL, req_handler, (void *)info);
     }
     //##### start the pidChild array ####
-    pidChildArray(THREADS_NUM, pidChild);
+    pidChildArray(NUM_THREADS, pidChild);
     //######### LISTENING ################clea#
     while (!termination_triggered)
     {

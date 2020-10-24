@@ -121,11 +121,11 @@ int handle_job(int fd)
             close(fds[1]);
             // WRITE childPid TO PID ARRAY HERE
             pthread_mutex_lock(&pidMutex);
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < NUM_THREADS; i++)
             {
                 if (pidChild[i] == 0)
                 {
-                    pidChild[i] = getpid();
+                    pidChild[i] = childPid;
                     break;
                 }
             }
@@ -140,6 +140,17 @@ int handle_job(int fd)
             else
                 executeFileFail(fullExec, log);
             free(fullExec);
+            // Remove childPid from array
+            pthread_mutex_lock(&pidMutex);
+            for (int i = 0; i < NUM_THREADS; i++)
+            {
+                if (pidChild[i] == childPid)
+                {
+                    pidChild[i] = 0;
+                    break;
+                }
+            }
+            pthread_mutex_unlock(&pidMutex);
             //#####FREE pidChild array####
             free(pidChild);
         }
