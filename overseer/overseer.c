@@ -17,12 +17,15 @@
 #define RETURNED_ERROR -1
 #define NUM_THREADS 5
 
-void term(int signum) {
+void term(int signum)
+{
     printf("\b\bCaught %d, terminating...\n", signum);
-    global->termination_triggered = 1;
+    clear_queue("Termfunc");
+    termination_triggered = 1;
 }
 
-void setSignals() {
+void setSignals()
+{
     struct sigaction action;
     memset(&action, 0, sizeof(struct sigaction));
     action.sa_handler = term;
@@ -30,15 +33,16 @@ void setSignals() {
     sigaction(SIGINT, &action, NULL);
 }
 
-void connectionMade(struct in_addr ip) {
+void connectionMade(struct in_addr ip)
+{
 
     char *time = getTime();
     printf("%s - connection received from %s\n", time, inet_ntoa(ip));
     free(time);
 }
 
-
-int runOverseer(int port) {
+int runOverseer(int port)
+{
     printf("Overseer now listening on port: %i\n", port);
 
     //######### START UP SERVER #################
@@ -47,7 +51,8 @@ int runOverseer(int port) {
     struct sockaddr_in controller_addr;
     socklen_t sin_size;
 
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+    {
         perror("socket");
         exit(1);
     }
@@ -62,12 +67,14 @@ int runOverseer(int port) {
     overseer_addr.sin_addr.s_addr = INADDR_ANY; // Asign the overseer's IP
     //######## ASSIGN OVERSEER STUFFS ###########
 
-    if (bind(sockfd, (struct sockaddr *) &overseer_addr, sizeof(struct sockaddr)) == -1) {
+    if (bind(sockfd, (struct sockaddr *)&overseer_addr, sizeof(struct sockaddr)) == -1)
+    {
         perror("bind()");
         exit(1);
     }
 
-    if (listen(sockfd, BACKLOG) == -1) {
+    if (listen(sockfd, BACKLOG) == -1)
+    {
         perror("listen()");
         exit(1);
     }
@@ -76,16 +83,21 @@ int runOverseer(int port) {
     pthread_t threadPool[NUM_THREADS];
     int threadIds[NUM_THREADS];
     for (int i = 0; i < NUM_THREADS; i++)
-        threadIds[i] = pthread_create(&threadPool[i], NULL, req_handler, (void *) global);
-
-    //######### START UP SERVER #################
-
+    {
+        struct thread_info *info = malloc(sizeof (struct thread_info));
+        info->thread_num = i;
+        threadIds[i] = pthread_create(&threadPool[i], NULL, req_handler, (void *)info);
+    }
+    //##### start the pidChild array ####
+    pidChildArray(THREADS_NUM, pidChild);
     //######### LISTENING ################clea#
-    while (!global->termination_triggered) {
+    while (!termination_triggered)
+    {
         //######## ASSIGN CONTROLLER STUFFS ###########
         sin_size = sizeof(struct sockaddr_in);
-        if ((newfd = accept(sockfd, (struct sockaddr *) &controller_addr, &sin_size)) == -1) {
-            if (!global->termination_triggered)
+        if ((newfd = accept(sockfd, (struct sockaddr *)&controller_addr, &sin_size)) == -1)
+        {
+            if (!termination_triggered)
                 perror("accept()");
             continue;
         }
@@ -95,24 +107,33 @@ int runOverseer(int port) {
     }
 
     //######## CLOSE EVERYTHING AND PERFORM CLEANUP #################
-    for (int i = 0; i < NUM_THREADS; i++) {
-        //pthread_join(threadPool[i], NULL);
+    clear_queue("Overseer");
+    add_request(-2, &request_mutex, &got_request); // Stop the threads from waiting
+    // TODO: send SIGKILL to all pids in the childpids array
+    for (int i = 0; i < NUM_THREADS; i++)
+    {
+        pthread_join(threadPool[i], NULL); // Wait for the thread to terminate
     }
+    printf("Stopped all threads.\n");
+    clear_queue("Overseer");
+    printf("Queue cleared.\n");
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     // Launch arg validation
-    if (argc != 2) {
+    if (argc != 2)
+    {
         printf("No port supplied. Please only provide a port number.\n");
         return 1;
     }
     int port = atoi(argv[1]);
-    if (port > 65535 || port <= 0) {
+    if (port > 65535 || port <= 0)
+    {
         printf("Invalid port number. Must be between 1 and 65535.\n");
         return 1;
     }
-    global = malloc(sizeof(struct global));
-    global->termination_triggered = 0;
+    termination_triggered = 0;
     pthread_mutex_init(&request_mutex, NULL);
     pthread_cond_init(&got_request, NULL);
     setSignals();

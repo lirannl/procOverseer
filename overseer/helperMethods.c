@@ -3,9 +3,11 @@
 #include <stdlib.h>
 #include <time.h>
 
-struct global {
-    volatile int termination_triggered;
+struct thread_info {
+    int thread_num;
 };
+
+volatile int termination_triggered;
 
 struct global *global = NULL;
 

@@ -16,13 +16,14 @@
 pthread_mutex_t pidMutex = PTHREAD_MUTEX_INITIALIZER;
 pid_t *pidChild;
 
-void pidChildArray(int num_threads, pid_t *pidChildPointer) {
+void pidChildArray(int num_threads, pid_t *pidChildPointer)
+{
     pidChild = pidChildPointer;
     pidChild = malloc(sizeof(pid_t) * num_threads);
-
 }
 
-struct timer_data {
+struct timer_data
+{
     int timeout;
     int logfd;
     pid_t pid;
@@ -34,16 +35,16 @@ int tHandler(char **);
 
 void *killProc(void *);
 
-int handle_job(int fd) {
-    //#####start the pidChild array####
-    pidChildArray(5, pidChild);
+int handle_job(int fd)
+{
     /* Call method to recieve array data */
     char *results = recvMessage(fd);
     char *args[MAX_ARGS];
     char *opts[(MAX_OPTIONALS * 2) + 1];
     int valid_input = 0;
     valid_input = interpret_input(results, args, opts);
-    if (!valid_input) {
+    if (!valid_input)
+    {
         fprintf(stderr, "Invalid input.\n");
         dprintf(fd, results);
         close(fd);
@@ -53,17 +54,20 @@ int handle_job(int fd) {
     // -o handling
     int out;
     int oIndex = findElemIndex(opts, "-o");
-    if (oIndex != -1) {
+    if (oIndex != -1)
+    {
         out = open(opts[oIndex + 1], O_WRONLY | O_APPEND | O_CREAT, 0666);
     }
     // -log handling
     int log = fileno(stdout);
     int lIndex = findElemIndex(opts, "-log");
-    if (lIndex != -1) {
+    if (lIndex != -1)
+    {
         log = open(opts[lIndex + 1], O_WRONLY | O_APPEND | O_CREAT, 0666);
     }
     char *fullExec = uniteStrArr(args);
-    if (valid_input == 1) {
+    if (valid_input == 1)
+    {
         // Append the execs folder to the path
         char cmdPath[CMD_MAX_LENGTH + 10];
         strcpy(cmdPath, "\0"); // Clear the cmdPath var
@@ -73,14 +77,16 @@ int handle_job(int fd) {
         pipe(fds);
         write(fds[1], "T", 1);
         pid_t childPid = fork();
-        if (!childPid) {
+        if (!childPid)
+        {
             executeFileStart(fullExec, log);
             free(fullExec);
             int stdoutBkp;
             int stderrBkp;
             dup2(fileno(stdout), stdoutBkp);
             dup2(fileno(stderr), stderrBkp);
-            if (oIndex != -1) {
+            if (oIndex != -1)
+            {
                 dup2(out, fileno(stdout));
                 dup2(out, fileno(stderr));
                 close(out);
@@ -92,7 +98,9 @@ int handle_job(int fd) {
             write(fds[1], "F", 1);
             close(fds[1]);
             exit(1);
-        } else {
+        }
+        else
+        {
             pthread_t timer;
             struct timer_data tData;
             tData.timeout = timeout;
@@ -112,8 +120,10 @@ int handle_job(int fd) {
             close(fds[1]);
             // WRITE childPid TO PID ARRAY HERE
             pthread_mutex_lock(&pidMutex);
-            for (int i = 0; i < 5; i++) {
-                if (pidChild[i] == 0) {
+            for (int i = 0; i < 5; i++)
+            {
+                if (pidChild[i] == 0)
+                {
                     pidChild[i] = getpid();
                     break;
                 }
@@ -137,7 +147,8 @@ int handle_job(int fd) {
         else if (!strcmp(args[0], "memkill"))
             memkillHandler(args);
     }
-    if (lIndex != -1) {
+    if (lIndex != -1)
+    {
         close(log);
     }
     free(results);
@@ -147,18 +158,23 @@ int handle_job(int fd) {
     return 0;
 }
 
-char *recvMessage(int fd) {
+char *recvMessage(int fd)
+{
     char chunk[500];
     char *msg;
-    memset(chunk, 0, 500);  //clear the variable
+    memset(chunk, 0, 500); //clear the variable
     int recvLen;
 
-    if ((recvLen = recv(fd, chunk, 500, 0)) < 0) {
+    if ((recvLen = recv(fd, chunk, 500, 0)) < 0)
+    {
         fprintf(stderr, "recv got invalid length value (got %d)\n", recvLen);
         exit(1);
-    } else {
+    }
+    else
+    {
         msg = malloc(sizeof(chunk) + 1);
-        for (int i = 0; i < recvLen; i++) {
+        for (int i = 0; i < recvLen; i++)
+        {
             msg[i] = chunk[i];
         }
         msg[sizeof(chunk) + 1] = '\0';
@@ -166,47 +182,63 @@ char *recvMessage(int fd) {
     }
 }
 
-void *req_handler(void *data) {
+void *req_handler(void *data)
+{
     struct request *a_request;
-    struct global *globalData = (struct global *) data;
-
+    struct thread_info *info = (struct thread_info *)data;
     /* lock the mutex, to access the requests list exclusively. */
     pthread_mutex_lock(&request_mutex);
 
-    while (!globalData->termination_triggered) {
-        if (num_requests > 0) {
+    int exit = 0;
+    while (!exit)
+    {
+        if (num_requests > 0)
+        {
             a_request = get_request();
-            if (a_request) { /* got a request - handle it and free it */
+            if (a_request)
+            { /* got a request - handle it and free it */
                 //TO DO - UNLOCCK MUTEX, CALL FUNCTION TO HANDLE REQUEST AND RELOCK MUTEX
                 pthread_mutex_unlock(&request_mutex);
-                handle_job(a_request->fd);
+                if (a_request->fd > 0) // Only try to handle jobs with valid fds
+                    handle_job(a_request->fd);
+                else if (a_request->fd == -2) exit = 1;
+                printf("Thread %d: Freeing req\n", info->thread_num);
                 free(a_request);
                 pthread_mutex_lock(&request_mutex);
             }
-        } else {
+        }
+        else if (!exit)
+        {
             pthread_cond_wait(&got_request, &request_mutex);
         }
     }
-    printf("Quitting thread...\n");
+    free(info);
+    pthread_mutex_unlock(&request_mutex);
+    if (termination_triggered) add_request(-2, &request_mutex, &got_request); // Free the next thread
 }
 
-int tHandler(char **opts) {
+int tHandler(char **opts)
+{
     int tIndex = findElemIndex(opts, "-t");
-    if (tIndex != -1) {
+    if (tIndex != -1)
+    {
         return atoi(opts[tIndex + 1]);
-    } else
+    }
+    else
         return 10;
 }
 
-void *killProc(void *data) {
-    struct timer_data *args = (struct timer_data *) data;
+void *killProc(void *data)
+{
+    struct timer_data *args = (struct timer_data *)data;
     sleep(args->timeout);
     if (kill(args->pid, 0) == -1)
         return NULL;
     kill(args->pid, SIGTERM);
     logSig(args->pid, "SIGTERM", args->logfd);
     sleep(5);
-    if (kill(args->pid, 0) != -1) {
+    if (kill(args->pid, 0) != -1)
+    {
         kill(args->pid, SIGKILL);
         logSig(args->pid, "SIGKILL", args->logfd);
     }
