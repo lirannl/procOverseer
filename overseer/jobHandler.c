@@ -15,13 +15,7 @@
 #include "memCollect.h"
 
 pthread_mutex_t pidMutex = PTHREAD_MUTEX_INITIALIZER;
-pid_t *pidChild;
-
-void pidChildArray(int num_threads, pid_t *pidChildPointer)
-{
-    pidChild = pidChildPointer;
-    pidChild = malloc(sizeof(pid_t) * num_threads);
-}
+pid_t pidChild[NUM_THREADS];
 
 struct timer_data
 {
@@ -129,9 +123,9 @@ int handle_job(int fd)
                     break;
                 }
             }
-            memEntry_t *tempEntry = create_newEntry(tempEntry, childPid, getTime(), "<bytes>", "<file>", "<args>");
+            /*memEntry_t *tempEntry = create_newEntry(tempEntry, childPid, getTime(), "<bytes>", "<file>", "<args>");
             memOverseer = entry_add(memOverseer, tempEntry);
-            entry_print(memOverseer, fileno(stdout));
+            entry_print(memOverseer, fileno(stdout));*/
             pthread_mutex_unlock(&pidMutex);
             int status;
             wait(&status);
@@ -151,8 +145,6 @@ int handle_job(int fd)
                 }
             }
             pthread_mutex_unlock(&pidMutex);
-            //#####FREE pidChild array####
-            free(pidChild);
         }
     }
     if (valid_input == 2) // Special handlers do not fork into a new process
@@ -218,7 +210,6 @@ void *req_handler(void *data)
                     handle_job(a_request->fd);
                 else if (a_request->fd == -2)
                     exit = 1;
-                printf("Thread %d: Freeing req\n", info->thread_num);
                 free(a_request);
                 pthread_mutex_lock(&request_mutex);
             }

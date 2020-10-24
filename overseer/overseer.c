@@ -87,8 +87,6 @@ int runOverseer(int port)
         info->thread_num = i;
         threadIds[i] = pthread_create(&threadPool[i], NULL, req_handler, (void *)info);
     }
-    //##### start the pidChild array ####
-    pidChildArray(NUM_THREADS, pidChild);
     //######### LISTENING ################clea#
     while (!termination_triggered)
     {
