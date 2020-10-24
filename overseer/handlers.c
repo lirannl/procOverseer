@@ -40,15 +40,12 @@ void memHandler(char **args) {
 }
 
 void memkill_handler(char **args, pid_t *pidChild, int num_threads) {
-    printf("memkill");
     struct sysinfo info;
     double percent;
     char *ptr;
 
     pid_t pid_child_cleaned[num_threads];
-    printf("Here");
     percent = strtod(args[1], &ptr);
-    printf("p: %lf", percent);
 
     if (sysinfo(&info) != 0) {
         perror("sysinfo: error reading system statistics");
@@ -57,7 +54,6 @@ void memkill_handler(char **args, pid_t *pidChild, int num_threads) {
 
     for (int i = 0; i < num_threads; i++) {
         int memory_used = get_memory_usage(pidChild[i]);
-        printf("Memory: %d", memory_used);
         // Kill process if it uses too much memory
         if (memory_used / total_memory * 100.0 > percent) {
             kill(pidChild[i], SIGKILL);
