@@ -12,6 +12,7 @@
 #include "inputReader.h"
 #include "connectionMethods.h"
 #include "requestQueue.h"
+#include "memCollect.h"
 
 pthread_mutex_t pidMutex = PTHREAD_MUTEX_INITIALIZER;
 pid_t *pidChild;
@@ -112,12 +113,9 @@ int handle_job(int fd) {
             close(fds[1]);
             // WRITE childPid TO PID ARRAY HERE
             pthread_mutex_lock(&pidMutex);
-            for (int i = 0; i < 5; i++) {
-                if (pidChild[i] == 0) {
-                    pidChild[i] = getpid();
-                    break;
-                }
-            }
+             memEntry_t *tempEntry = create_newEntry(tempEntry, getpid(), getTime(), "<bytes>","<file>","<args>");
+                memOverseer = entry_add(memOverseer, tempEntry); 
+                entry_print(memOverseer, fileno(stdout)); 
             pthread_mutex_unlock(&pidMutex);
             int status;
             wait(&status);
