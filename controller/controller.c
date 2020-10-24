@@ -219,7 +219,9 @@ int main(int argc, char *argv[]) {
 
 /**
  * Checking if all characters in string are valid digits.
- * */
+ * @param string: Input argument string
+ * @return True if valid int
+ */
 bool check_valid_int(char *string) {
     u_long length = strlen(string);
     for (int i = 0; i < length; i++) {
@@ -232,14 +234,18 @@ bool check_valid_int(char *string) {
 
 /**
  * Checking if input string matches one of the argument flags.
- * */
+ * @param string: Input argument string
+ * @return True if input is a valid argument flag
+ */
 bool check_for_flag(char *string) {
     return strcmp(string, "-o") == 0 || strcmp(string, "-log") == 0 || strcmp(string, "-t") == 0;
 }
 
 /**
- * Checking if all characters in string are valid digits and string is allowed to contain one decimal point.
- * */
+ *  Checking if all characters in string are valid digits and string is allowed to contain one decimal point.
+ * @param string: Input argument string
+ * @return True if input is a valid percent
+ */
 bool check_valid_percent(char *string) {
     u_long length = strlen(string);
     bool found_decimal = 0;
@@ -256,7 +262,9 @@ bool check_valid_percent(char *string) {
 
 /**
  * Checking if input port is a valid int and within valid port range.
- * */
+ * @param string: Input argument string
+ * @return True if input is valid port
+ */
 bool check_valid_port(char *string) {
     if (!check_valid_int(string)) {
         return 0;
@@ -268,7 +276,9 @@ bool check_valid_port(char *string) {
 
 /**
  * Checking if input is a valid host.
- * */
+ * @param string : Input argument string
+ * @return True if input is valid host
+ */
 bool check_valid_host(char *string) {
     struct in_addr addr = {0};
     return inet_pton(AF_INET, string, &addr) != 1;
