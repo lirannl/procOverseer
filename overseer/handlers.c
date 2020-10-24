@@ -65,5 +65,6 @@ void memkill_handler(char **args, pid_t *pidChild, int num_threads) {
             pid_child_cleaned[i] = pidChild[i];
         }
     }
+    pidChild = pid_child_cleaned;
 }
 
