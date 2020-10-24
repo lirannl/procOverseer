@@ -5,6 +5,6 @@
 
 void memHandler(char **);
 
-void memkillHandler(char **);
+void memkillHandler(char **, pid_t pInt[5]);
 
 #endif

@@ -136,8 +136,11 @@ int handle_job(int fd) {
     {
         if (!strcmp(args[0], "mem"))
             memHandler(args);
-        else if (!strcmp(args[0], "memkill"))
-            memkillHandler(args);
+        else if (!strcmp(args[0], "memkill")) {
+            pthread_mutex_lock(&pidMutex);
+            memkill_handler(args, pidChild, NUM_THREADS);
+            pthread_mutex_unlock(&pidMutex);
+        }
     }
     if (lIndex != -1) {
         close(log);
