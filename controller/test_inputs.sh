@@ -11,29 +11,28 @@ OK_CMD=$'\nCould not connect to overseer localhost 8000\n'
 
 # Valid options
 declare -a valid_inputs=(
-"localhost 8000 mem"
-"localhost 8000 mem 1234"
-"localhost 8000 memkill 12.5"
-"localhost 8000 file"
-"localhost 8000 file -o -t -log"
-"localhost 8000 file arg"
-"localhost 8000 file arg -o out"
-"localhost 8000 -o out file"
-"localhost 8000 -log log file"
-"localhost 8000 -t 10 file"
-"localhost 8000 -o out file arg"
-"localhost 8000 -o out file arg ag2"
-"localhost 8000 -o out -log logfile file arg ag2"
-"localhost 8000 -o out -t 10 file arg ag2"
-"localhost 8000 -log logfile -t 10 file arg ag2"
-"localhost 8000 -o out -log logfile -t 10 file arg ag2"
+  "localhost 8000 mem"
+  "localhost 8000 mem 1234"
+  "localhost 8000 memkill 12.5"
+  "localhost 8000 file"
+  "localhost 8000 file -o -t -log"
+  "localhost 8000 file arg"
+  "localhost 8000 file arg -o out"
+  "localhost 8000 -o out file"
+  "localhost 8000 -log log file"
+  "localhost 8000 -t 10 file"
+  "localhost 8000 -o out file arg"
+  "localhost 8000 -o out file arg ag2"
+  "localhost 8000 -o out -log logfile file arg ag2"
+  "localhost 8000 -o out -t 10 file arg ag2"
+  "localhost 8000 -log logfile -t 10 file arg ag2"
+  "localhost 8000 -o out -log logfile -t 10 file arg ag2"
 )
 
 echo -e "\nTesting all valid input combinations"
 
-for i in "${valid_inputs[@]}"
-do
-  if ./test_controller_args $(echo "$i") 2> >(grep -q "${OK_CMD}"); then
+for i in "${valid_inputs[@]}"; do
+  if ./test_controller_args $(echo "$i") 2> >(grep -q "$OK_CMD"); then
     echo -e "${GREEN}Test ./test_controller_args ""$i"" passed.${NC}"
   else
     echo -e "${RED}Test ./test_controller_args ""$i"" failed.${NC}"
@@ -46,6 +45,18 @@ if ./test_controller_args 2> >(grep -q "${HELP_CMD}"); then
   echo -e "${GREEN}Test with no args passed.${NC}"
 else
   echo -e "${RED}Test with no args failed.${NC}"
+fi
+
+if ./test_controller_args asdasd 8000 2> >(grep -q "${HELP_CMD}"); then
+  echo -e "${GREEN}Test with invalid host passed.${NC}"
+else
+  echo -e "${RED}Test with invalid host failed.${NC}"
+fi
+
+if ./test_controller_args localhost cat 2> >(grep -q "${HELP_CMD}"); then
+  echo -e "${GREEN}Test with invalid port passed.${NC}"
+else
+  echo -e "${RED}Test with invalid port failed.${NC}"
 fi
 
 if ./test_controller_args --help 1> >(grep -q "${HELP_CMD}"); then

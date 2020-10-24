@@ -50,7 +50,8 @@ int main(int argc, char *argv[]) {
     }
 
     if (argc == 4) {
-        if (strcmp(argv[3], "mem") != 0 || check_for_flag(argv[3])) {
+        // Can only be mem or file
+        if (strcmp(argv[3], "mem") != 0 && check_for_flag(argv[3])) {
             print_help(stderr);
             return 0;
         }
