@@ -129,7 +129,7 @@ int handle_job(int fd)
                     break;
                 }
             }
-            memEntry_t *tempEntry = create_newEntry(tempEntry, getpid(), getTime(), "<bytes>", "<file>", "<args>");
+            memEntry_t *tempEntry = create_newEntry(tempEntry, childPid, getTime(), "<bytes>", "<file>", "<args>");
             memOverseer = entry_add(memOverseer, tempEntry);
             entry_print(memOverseer, fileno(stdout));
             pthread_mutex_unlock(&pidMutex);
