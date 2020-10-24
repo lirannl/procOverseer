@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (argc == 4) {
-        if (!strcmp(argv[3], "mem") || !strcmp(argv[3], "memkill") || check_for_flag(argv[3])) {
+        if (!strcmp(argv[3], "mem") || check_for_flag(argv[3])) {
             print_help(stderr);
             return 0;
         }
@@ -71,7 +71,6 @@ int main(int argc, char *argv[]) {
             print_help(stderr);
             return 0;
         }
-        else printf(argv[3]);
     }
 
 
