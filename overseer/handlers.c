@@ -1,5 +1,11 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/sysinfo.h>
+#include <pthread.h>
+#include <signal.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
 
 int get_memory_usage(pid_t pid) {
     int fd, data, stack;
@@ -39,7 +45,6 @@ void memkill_handler(char **args, pid_t *pidChild, int num_threads) {
     char *ptr;
 
     pid_t pid_child_cleaned[num_threads];
-
 
     percent = strtod(args[1], &ptr);
 
