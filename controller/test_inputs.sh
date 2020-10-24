@@ -7,29 +7,40 @@ echo "Recompiling controller"
 
 gcc controller.c -o test_controller_args
 HELP_CMD=$'Usage: controller <address> <port> {[-o out_file] [-log log_file] [-t seconds] <file> [arg...] | mem [pid] | memkill <percent>}\n'
+OK_CMD=$'\nCould not connect to overseer localhost 8000\n'
 
 # Valid options
-# ./controller localhost port -o out <file> [arg...]
-# ./controller localhost port -o out -log logfile <file> [arg...]
-# ./controller localhost port -o out -t seconds <file> [arg...]
-# ./controller localhost port -o out -log logfile -t seconds <file> [arg...]
+declare -a valid_inputs=(
+"localhost 8000 mem"
+"localhost 8000 mem 1234"
+"localhost 8000 memkill 12.5"
+"localhost 8000 file"
+"localhost 8000 file -o -t -log"
+"localhost 8000 file arg"
+"localhost 8000 file arg -o out"
+"localhost 8000 -o out file"
+"localhost 8000 -log log file"
+"localhost 8000 -t 10 file"
+"localhost 8000 -o out file arg"
+"localhost 8000 -o out file arg ag2"
+"localhost 8000 -o out -log logfile file arg ag2"
+"localhost 8000 -o out -t 10 file arg ag2"
+"localhost 8000 -log logfile -t 10 file arg ag2"
+"localhost 8000 -o out -log logfile -t 10 file arg ag2"
+)
 
-# ./controller localhost port -log logfile <file> [arg...]
-# ./controller localhost port -log logfile -t seconds <file> [arg...]
+echo -e "\nTesting all valid input combinations"
 
-# ./controller localhost port -t seconds <file> [arg...]
+for i in "${valid_inputs[@]}"
+do
+  if ./test_controller_args $(echo "$i") 2> >(grep -q "${OK_CMD}"); then
+    echo -e "${GREEN}Test ./test_controller_args ""$i"" passed.${NC}"
+  else
+    echo -e "${RED}Test ./test_controller_args ""$i"" failed.${NC}"
+  fi
+done
 
-# ./controller localhost port <file>
-# ./controller localhost port <file> [arg...]
-
-# ./controller localhost port mem
-# ./controller localhost port mem [pid]
-
-# ./controller localhost port memkill <percent>
-
-# ./controller --help
-
-echo "Testing all input combinations"
+echo -e "\nTesting invalid input combinations & --help"
 
 if ./test_controller_args 2> >(grep -q "${HELP_CMD}"); then
   echo -e "${GREEN}Test with no args passed.${NC}"
