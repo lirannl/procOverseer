@@ -78,13 +78,12 @@ struct request *get_request()
 }
 
 // Clear the queue
-void clear_queue(char *clearer)
+void clear_queue()
 {
     struct request *req = get_request();
     // Clear the request queue
     while (req != NULL)
     {
-        printf("%s: Freeing req with fd %d\n", clearer, req->fd);
         free(req);
         req = get_request();
     }

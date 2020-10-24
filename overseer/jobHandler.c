@@ -91,7 +91,6 @@ int handle_job(int fd)
             dup2(stdoutBkp, fileno(stdout));
             dup2(stderrBkp, fileno(stderr));
             write(fds[1], "F", 1);
-            close(fds[1]);
             exit(1);
         }
         else

@@ -19,7 +19,7 @@
 void term(int signum)
 {
     printf("\b\bCaught %d, terminating...\n", signum);
-    clear_queue("Termfunc");
+    clear_queue();
     termination_triggered = 1;
 }
 
@@ -104,9 +104,15 @@ int runOverseer(int port)
     }
 
     //######## CLOSE EVERYTHING AND PERFORM CLEANUP #################
-    clear_queue("Overseer");
+    clear_queue();
+    // Kill all childPids
+    pthread_mutex_lock(&pidMutex);
+    for (int i = 0; i < NUM_THREADS; i++) {
+        logSig(pidChild[i], "SIGKILL", fileno(stdout));
+        kill(pidChild[i], SIGKILL);
+    }
+    pthread_mutex_unlock(&pidMutex);
     add_request(-2, &request_mutex, &got_request); // Stop the threads from waiting
-    // TODO: send SIGKILL to all pids in the childpids array
     for (int i = 0; i < NUM_THREADS; i++)
     {
         pthread_join(threadPool[i], NULL); // Wait for the thread to terminate
