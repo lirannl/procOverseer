@@ -12,6 +12,7 @@
 #include "inputReader.h"
 #include "connectionMethods.h"
 #include "requestQueue.h"
+#include "memCollect.h"
 
 pthread_mutex_t pidMutex = PTHREAD_MUTEX_INITIALIZER;
 pid_t *pidChild;
@@ -128,6 +129,9 @@ int handle_job(int fd)
                     break;
                 }
             }
+            memEntry_t *tempEntry = create_newEntry(tempEntry, getpid(), getTime(), "<bytes>", "<file>", "<args>");
+            memOverseer = entry_add(memOverseer, tempEntry);
+            entry_print(memOverseer, fileno(stdout));
             pthread_mutex_unlock(&pidMutex);
             int status;
             wait(&status);
@@ -201,7 +205,8 @@ void *req_handler(void *data)
                 pthread_mutex_unlock(&request_mutex);
                 if (a_request->fd > 0) // Only try to handle jobs with valid fds
                     handle_job(a_request->fd);
-                else if (a_request->fd == -2) exit = 1;
+                else if (a_request->fd == -2)
+                    exit = 1;
                 printf("Thread %d: Freeing req\n", info->thread_num);
                 free(a_request);
                 pthread_mutex_lock(&request_mutex);
@@ -214,7 +219,8 @@ void *req_handler(void *data)
     }
     free(info);
     pthread_mutex_unlock(&request_mutex);
-    if (termination_triggered) add_request(-2, &request_mutex, &got_request); // Free the next thread
+    if (termination_triggered)
+        add_request(-2, &request_mutex, &got_request); // Free the next thread
 }
 
 int tHandler(char **opts)
