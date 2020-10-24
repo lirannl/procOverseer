@@ -27,11 +27,11 @@ executable files, documentation, bug fixes, code cleanups, and bash test scripts
 
 ID:
 name:Liran Piade
-contribution: executable files, commenting, bug fixes, code clean ups
+contribution: executable files, bug fixes, code clean ups
 
 ID:
 name:Stephen Horsburgh
-contribution: executable files, commenting, bug fixes, code clean ups
+contribution: executable files, bug fixes, code clean ups
 
 Comments:
 Liran and Stephen were the primary builders of the overseer and Cecil was the primary builder of the controller.
