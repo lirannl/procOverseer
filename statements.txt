@@ -23,7 +23,7 @@ Fill the below with your student IDs, names, and contribution description.
 ID:n10565779
 name:Cecil Hammett
 contribution: Full implementation of controller, receiving message from controller and memkill <percent> in overseer,
-executable files, documentation, bug fixes, code cleanups, and bash test scripts for controller
+executable files, documentation, Makefile, bug fixes, code cleanups, and bash test scripts for controller
 
 ID:n10446711
 name:Liran Piade
