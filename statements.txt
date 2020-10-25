@@ -32,7 +32,7 @@ process signalling, signal handling, bug fixes, code clean ups
 
 ID:n10614303
 name:Stephen Horsburgh
-contribution: executable files, bug fixes, code clean ups
+contribution: Formating output from the overseer, memory handling, overseer frame, bug fixes, code clean ups
 
 Comments:
 Liran and Stephen were the primary builders of the overseer and Cecil was the primary builder of the controller.
