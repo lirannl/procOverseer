@@ -57,11 +57,7 @@ int handle_job(int fd) {
     }
     char *fullExec = uniteStrArr(args);
     if (valid_input == 1) {
-        // Append the execs folder to the path
-        char cmdPath[CMD_MAX_LENGTH + 10];
-        strcpy(cmdPath, "\0"); // Clear the cmdPath var
-        strcat(cmdPath, "./execs/");
-        strcat(cmdPath, args[0]);
+        close(fd);
         int fds[2];
         pipe(fds);
         write(fds[1], "T", 1);
@@ -78,7 +74,9 @@ int handle_job(int fd) {
                 dup2(out, fileno(stderr));
                 close(out);
             }
-            execv(cmdPath, args);
+            printf(args[0]);
+            execv(args[0], args);
+            perror("execv:");
             // This will only happen if the file failed to execute
             dup2(stdoutBkp, fileno(stdout));
             dup2(stderrBkp, fileno(stderr));
@@ -141,14 +139,12 @@ int handle_job(int fd) {
             memkill_handler(args, pidChild, NUM_THREADS);
             pthread_mutex_unlock(&pidMutex);
         }
+        close(fd);
     }
     if (lIndex != -1) {
         close(log);
     }
     free(results);
-    if (send(fd, "All of array data received by server\n", 40, 0) == -1)
-        perror("send");
-    close(fd);
     return 0;
 }
 

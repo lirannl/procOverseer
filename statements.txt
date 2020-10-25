@@ -25,9 +25,10 @@ name:Cecil Hammett
 contribution: Full implementation of controller, receiving message from controller and memkill <percent> in overseer,
 executable files, documentation, bug fixes, code cleanups, and bash test scripts for controller
 
-ID:
+ID:n10446711
 name:Liran Piade
-contribution: executable files, bug fixes, code clean ups
+contribution: executable files, interpreting the input on the overseer, output redirection, thread pool, 
+process signalling, signal handling, bug fixes, code clean ups
 
 ID:
 name:Stephen Horsburgh

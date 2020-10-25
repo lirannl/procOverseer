@@ -83,7 +83,7 @@ int runOverseer(int port)
     int threadIds[NUM_THREADS];
     for (int i = 0; i < NUM_THREADS; i++)
     {
-        struct thread_info *info = malloc(sizeof (struct thread_info));
+        struct thread_info *info = malloc(sizeof(struct thread_info));
         info->thread_num = i;
         threadIds[i] = pthread_create(&threadPool[i], NULL, req_handler, (void *)info);
     }
@@ -107,10 +107,12 @@ int runOverseer(int port)
     clear_queue();
     // Kill all childPids
     pthread_mutex_lock(&pidMutex);
-    for (int i = 0; i < NUM_THREADS; i++) {
-        logSig(pidChild[i], "SIGKILL", fileno(stdout));
-        kill(pidChild[i], SIGKILL);
-    }
+    for (int i = 0; i < NUM_THREADS; i++)
+        if (pidChild[i])
+        {
+            logSig(pidChild[i], "SIGKILL", fileno(stdout));
+            kill(pidChild[i], SIGKILL);
+        }
     pthread_mutex_unlock(&pidMutex);
     add_request(-2, &request_mutex, &got_request); // Stop the threads from waiting
     for (int i = 0; i < NUM_THREADS; i++)
@@ -118,7 +120,7 @@ int runOverseer(int port)
         pthread_join(threadPool[i], NULL); // Wait for the thread to terminate
     }
     printf("Stopped all threads.\n");
-    clear_queue("Overseer");
+    clear_queue();
     printf("Queue cleared.\n");
 }
 
