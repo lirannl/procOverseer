@@ -1,7 +1,10 @@
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <arpa/inet.h>
+#include <string.h>
+#include <time.h>
 #include <unistd.h>
+#include <math.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include "helperMethods.h"
@@ -13,6 +16,7 @@
 
 pthread_mutex_t pidMutex = PTHREAD_MUTEX_INITIALIZER;
 pid_t pidChild[NUM_THREADS];
+char *memInfo[NUM_THREADS];
 
 struct timer_data {
     int timeout;
@@ -28,6 +32,7 @@ void *killProc(void *);
 
 int handle_job(int fd) {
     /* Call method to recieve array data */
+
     char *results = recvMessage(fd);
     char *args[MAX_ARGS];
     char *opts[(MAX_OPTIONALS * 2) + 1];
@@ -99,14 +104,21 @@ int handle_job(int fd) {
             close(fds[1]);
             // WRITE childPid TO PID ARRAY HERE
             pthread_mutex_lock(&pidMutex);
+             memEntry_t *TempEntry = (memEntry_t *)malloc(sizeof(memEntry_t));
+              TempEntry = create_newEntry(TempEntry, childPid, getTime(), get_memory_usage(childPid), args[0], "args");
+                memOverseer = entry_add(memOverseer, TempEntry);
+
             for (int i = 0; i < NUM_THREADS; i++) {
                 if (pidChild[i] == 0) {
                     pidChild[i] = childPid;
+                    memInfo[i] = results;
                     break;
                 }
+
             }
 
             pthread_mutex_unlock(&pidMutex);
+
             int status;
             wait(&status);
             if (success)
@@ -116,22 +128,46 @@ int handle_job(int fd) {
             free(fullExec);
             // Remove childPid from array
             pthread_mutex_lock(&pidMutex);
+
             for (int i = 0; i < NUM_THREADS; i++) {
                 if (pidChild[i] == childPid) {
                     pidChild[i] = 0;
                     break;
                 }
             }
+
             pthread_mutex_unlock(&pidMutex);
         }
     }
     if (valid_input == 2) // Special handlers do not fork into a new process
     {
-        if (!strcmp(args[0], "mem"))
-            memHandler(args);
+        if (!strcmp(args[0], "mem")){
+            pthread_mutex_lock(&pidMutex);
+
+                if (send(fd, memHandler(pidChild), 40, 0) == -1){
+                    perror("send");
+                }
+
+            pthread_mutex_unlock(&pidMutex);
+        }
         else if (!strcmp(args[0], "memkill")) {
             pthread_mutex_lock(&pidMutex);
             memkill_handler(args, pidChild, NUM_THREADS);
+            pthread_mutex_unlock(&pidMutex);
+        }
+    }
+    if (valid_input == 3) // Special handlers do not fork into a new process
+    {
+        if (!strcmp(args[0], "mem")){
+            int pidSearch;
+            if(atoi(args[1]))
+            pidSearch = atoi(args[1]);
+            pthread_mutex_lock(&pidMutex);
+
+                if (send(fd, mempid_handler(pidSearch), 40, 0) == -1){
+                    perror("send");
+                }
+
             pthread_mutex_unlock(&pidMutex);
         }
         close(fd);
