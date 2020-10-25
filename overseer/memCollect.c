@@ -8,9 +8,8 @@ typedef struct memCollection memCollection_t;
 
 typedef struct memEntry {
     pid_t pid;
-    int usage;
     char *time;
-    char *bytes;
+    int bytes;
     char *file;
     char *args;
 } memEntry_t;
@@ -22,7 +21,7 @@ struct memCollection{
 
 memCollection_t *memOverseer;
 
-memEntry_t *create_newEntry(memEntry_t* entry, pid_t newPID, char * newTime, char * newBytes, char * newFile, char *newArgs){
+memEntry_t *create_newEntry(memEntry_t* entry, pid_t newPID, char * newTime, int newBytes, char * newFile, char *newArgs){
     entry->pid=newPID;
     entry->time=newTime;
     entry->bytes=newBytes;
@@ -71,9 +70,21 @@ memCollection_t *entry_delete(memCollection_t *head, pid_t pid){
     return head;
 }
 
-void entry_print(memCollection_t *head, int fd){
+char *print_entry(memCollection_t *head, int fd){
+
+    char *memArray;
     for(; head !=NULL; head =head->next){
-        dprintf(fd,"%d %s %s %s\n",head->entry->pid,head->entry->bytes, head->entry->file, head->entry->args);
+        sprintf(memArray, "%d %d %s %s\n",head->entry->pid, head->entry->bytes, head->entry->file, head->entry->args);
+    }
+    return memArray;
+}
+
+void print_mempid(memCollection_t *head, pid_t pid, int fd){
+    for(; head !=NULL; head =head->next){
+        if(pid = head->entry->pid){
+            dprintf(fd,"%s %d\n",head->entry->time, head->entry->bytes);
+        }
+        
     }
 }
 
