@@ -16,6 +16,7 @@
 
 pthread_mutex_t pidMutex = PTHREAD_MUTEX_INITIALIZER;
 pid_t pidChild[NUM_THREADS];
+char *memInfo[NUM_THREADS];
 
 struct timer_data {
     int timeout;
@@ -31,6 +32,7 @@ void *killProc(void *);
 
 int handle_job(int fd) {
     /* Call method to recieve array data */
+    
     char *results = recvMessage(fd);
     char *args[MAX_ARGS];
     char *opts[(MAX_OPTIONALS * 2) + 1];
@@ -104,16 +106,19 @@ int handle_job(int fd) {
             close(fds[1]);
             // WRITE childPid TO PID ARRAY HERE
             pthread_mutex_lock(&pidMutex);
+             memEntry_t *TempEntry = create_newEntry(TempEntry, childPid, getTime(), get_memory_usage(childPid), args[0], "args");
+                memOverseer = entry_add(memOverseer, TempEntry);
             for (int i = 0; i < NUM_THREADS; i++) {
                 if (pidChild[i] == 0) {
                     pidChild[i] = childPid;
+                    memInfo[i] = results;
                     break;
                 }
+               
             }
-            /*memEntry_t *tempEntry = create_newEntry(tempEntry, childPid, getTime(), "<bytes>", "<file>", "<args>");
-            memOverseer = entry_add(memOverseer, tempEntry);
-            entry_print(memOverseer, fileno(stdout));*/
+                    
             pthread_mutex_unlock(&pidMutex);
+            
             int status;
             wait(&status);
             if (success)
@@ -130,9 +135,11 @@ int handle_job(int fd) {
                 
                 if (pidChild[i] == childPid) {
                     pidChild[i] = 0;
+                    //memInfo[i] = "nothing";
                     break;
                 }
             }
+            
             pthread_mutex_unlock(&pidMutex);
         }
     }
@@ -143,11 +150,9 @@ int handle_job(int fd) {
                 //sends the linked list values to the controller
                 if (send(fd, memHandler(pidChild), 40, 0) == -1){
                     perror("send");
-                }
-                    
+                } 
             pthread_mutex_unlock(&pidMutex);
         }
-            
         else if (!strcmp(args[0], "memkill")) {
             pthread_mutex_lock(&pidMutex);
             memkill_handler(args, pidChild, NUM_THREADS);
@@ -158,7 +163,7 @@ int handle_job(int fd) {
         close(log);
     }
     free(results);
-    if (send(fd, "All of array data received by server\n", 40, 0) == -1)
+    if (send(fd, "This is what you are looking for\n", 40, 0) == -1)
         perror("send");
     close(fd);
     return 0;

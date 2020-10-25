@@ -19,6 +19,7 @@ struct memCollection{
     memCollection_t *next;
 };
 
+
 memCollection_t *memOverseer;
 
 memEntry_t *create_newEntry(memEntry_t* entry, pid_t newPID, char * newTime, int newBytes, char * newFile, char *newArgs){
@@ -54,7 +55,7 @@ memCollection_t *entry_delete(memCollection_t *head, pid_t pid){
     memCollection_t *previous = NULL;
     memCollection_t *current = head;
     while(current != NULL){
-        if ((pid == current->entry->pid)==0){
+        if (pid == current->entry->pid){
             memCollection_t *newhead = head;
             if(previous ==NULL){
                 newhead = current->next;
@@ -73,14 +74,15 @@ memCollection_t *entry_delete(memCollection_t *head, pid_t pid){
 char *print_entry(memCollection_t *head, int fd){
 
     char *memArray;
+
     for(; head !=NULL; head =head->next){
         sprintf(memArray, "%d %d %s %s\n",head->entry->pid, head->entry->bytes, head->entry->file, head->entry->args);
     }
     return memArray;
 }
-
 void print_mempid(memCollection_t *head, pid_t pid, int fd){
     for(; head !=NULL; head =head->next){
+
         if(pid = head->entry->pid){
             dprintf(fd,"%s %d\n",head->entry->time, head->entry->bytes);
         }
