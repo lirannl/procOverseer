@@ -129,6 +129,10 @@ int handle_job(int fd) {
             // Remove childPid from array
             pthread_mutex_lock(&pidMutex);
             for (int i = 0; i < NUM_THREADS; i++) {
+                //creates temprary memEntry and adds to the global linked list
+                memEntry_t *TempEntry = create_newEntry(TempEntry, childPid, getTime(), get_memory_usage(childPid), args[0], "args");
+                memOverseer = entry_add(memOverseer, TempEntry);
+                
                 if (pidChild[i] == childPid) {
                     pidChild[i] = 0;
                     //memInfo[i] = "nothing";
@@ -143,11 +147,10 @@ int handle_job(int fd) {
     {
         if (!strcmp(args[0], "mem")){
             pthread_mutex_lock(&pidMutex);
-                
+                //sends the linked list values to the controller
                 if (send(fd, memHandler(pidChild), 40, 0) == -1){
                     perror("send");
-                }
-                    
+                } 
             pthread_mutex_unlock(&pidMutex);
         }
         else if (!strcmp(args[0], "memkill")) {

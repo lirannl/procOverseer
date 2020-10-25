@@ -74,6 +74,7 @@ memCollection_t *entry_delete(memCollection_t *head, pid_t pid){
 char *print_entry(memCollection_t *head, int fd){
 
     char *memArray;
+
     for(; head !=NULL; head =head->next){
         sprintf(memArray, "%d %d %s %s\n",head->entry->pid, head->entry->bytes, head->entry->file, head->entry->args);
     }
@@ -81,6 +82,7 @@ char *print_entry(memCollection_t *head, int fd){
 }
 void print_mempid(memCollection_t *head, pid_t pid, int fd){
     for(; head !=NULL; head =head->next){
+
         if(pid = head->entry->pid){
             dprintf(fd,"%s %d\n",head->entry->time, head->entry->bytes);
         }
