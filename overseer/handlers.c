@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
+#include "memCollect.h"
 
 int get_memory_usage(pid_t pid) {
     int fd, data, stack;
