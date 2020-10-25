@@ -104,9 +104,9 @@ int handle_job(int fd) {
             close(fds[1]);
             // WRITE childPid TO PID ARRAY HERE
             pthread_mutex_lock(&pidMutex);
-             memEntry_t *TempEntry = (memEntry_t *)malloc(sizeof(memEntry_t));
-              TempEntry = create_newEntry(TempEntry, childPid, getTime(), get_memory_usage(childPid), args[0], "args");
-                memOverseer = entry_add(memOverseer, TempEntry);
+            memEntry_t *TempEntry = (memEntry_t *) malloc(sizeof(memEntry_t));
+            TempEntry = create_newEntry(TempEntry, childPid, getTime(), get_memory_usage(childPid), args[0], "args");
+            memOverseer = entry_add(memOverseer, TempEntry);
 
             for (int i = 0; i < NUM_THREADS; i++) {
                 if (pidChild[i] == 0) {
@@ -141,16 +141,15 @@ int handle_job(int fd) {
     }
     if (valid_input == 2) // Special handlers do not fork into a new process
     {
-        if (!strcmp(args[0], "mem")){
+        if (!strcmp(args[0], "mem")) {
             pthread_mutex_lock(&pidMutex);
 
-                if (send(fd, memHandler(pidChild), 40, 0) == -1){
-                    perror("send");
-                }
+            if (send(fd, memHandler(pidChild), 40, 0) == -1) {
+                perror("send");
+            }
 
             pthread_mutex_unlock(&pidMutex);
-        }
-        else if (!strcmp(args[0], "memkill")) {
+        } else if (!strcmp(args[0], "memkill")) {
             pthread_mutex_lock(&pidMutex);
             memkill_handler(args, pidChild, NUM_THREADS);
             pthread_mutex_unlock(&pidMutex);
@@ -158,15 +157,15 @@ int handle_job(int fd) {
     }
     if (valid_input == 3) // Special handlers do not fork into a new process
     {
-        if (!strcmp(args[0], "mem")){
+        if (!strcmp(args[0], "mem")) {
             int pidSearch;
-            if(atoi(args[1]))
-            pidSearch = atoi(args[1]);
+            if (atoi(args[1]))
+                pidSearch = atoi(args[1]);
             pthread_mutex_lock(&pidMutex);
 
-                if (send(fd, mempid_handler(pidSearch), 40, 0) == -1){
-                    perror("send");
-                }
+            if (send(fd, mempid_handler(pidSearch), 40, 0) == -1) {
+                perror("send");
+            }
 
             pthread_mutex_unlock(&pidMutex);
         }
