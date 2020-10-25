@@ -61,16 +61,18 @@ void memkill_handler(char **args, pid_t *pidChild, int num_threads) {
         perror("sysinfo: error reading system statistics");
     }
 
-    double total_memory = info.totalram;
+    int32_t total_memory = info.totalram;
     for (int i = 0; i < num_threads; i++) {
-        int memory_used = get_memory_usage(pidChild[i]);
-        // Kill process if it uses too much memory
-        if (memory_used / total_memory * 100.0 > percent) {
+        if (pidChild[i] != 0) {
+            int memory_used = get_memory_usage(pidChild[i]);
+            
+            // Kill process if it uses too much memory
+            if (memory_used / total_memory * 100.0 > percent) {
+                kill(pidChild[i], SIGKILL);
+            } else {
+                pid_child_cleaned[i] = pidChild[i];
 
-            kill(pidChild[i], SIGKILL);
-        } else {
-            pid_child_cleaned[i] = pidChild[i];
-
+            }
         }
     }
     pidChild = pid_child_cleaned;

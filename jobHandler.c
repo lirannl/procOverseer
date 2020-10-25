@@ -153,6 +153,10 @@ int handle_job(int fd) {
             pthread_mutex_lock(&pidMutex);
             memkill_handler(args, pidChild, NUM_THREADS);
             pthread_mutex_unlock(&pidMutex);
+
+            if (send(fd, "", 40, 0) == -1) {
+                perror("send");
+            }
         }
     }
     if (valid_input == 3) // Special handlers do not fork into a new process
