@@ -35,8 +35,8 @@ int get_memory_usage(pid_t pid) {
     return data + stack;
 }
 
-void memHandler(char **args) {
-    printf("This is the mem handler.\n");
+char  *memHandler(pid_t *pidChild) {
+     return  print_entry(memOverseer, fileno(stdout));
 }
 
 void memkill_handler(char **args, pid_t *pidChild, int num_threads) {
