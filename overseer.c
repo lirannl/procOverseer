@@ -7,14 +7,12 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <time.h>
-#include <arpa/inet.h>
 #include <pthread.h>
 #include "jobHandler.h"
 #include "helperMethods.h"
 #include "requestQueue.h"
 
 #define BACKLOG 10
-#define RETURNED_ERROR -1
 
 void term(int signum)
 {

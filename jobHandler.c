@@ -1,10 +1,7 @@
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <arpa/inet.h>
-#include <string.h>
-#include <time.h>
 #include <unistd.h>
-#include <math.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include "helperMethods.h"
@@ -108,9 +105,7 @@ int handle_job(int fd) {
                     break;
                 }
             }
-            /*memEntry_t *tempEntry = create_newEntry(tempEntry, childPid, getTime(), "<bytes>", "<file>", "<args>");
-            memOverseer = entry_add(memOverseer, tempEntry);
-            entry_print(memOverseer, fileno(stdout));*/
+
             pthread_mutex_unlock(&pidMutex);
             int status;
             wait(&status);
@@ -187,7 +182,6 @@ void *req_handler(void *data) {
         if (num_requests > 0) {
             a_request = get_request();
             if (a_request) { /* got a request - handle it and free it */
-                //TO DO - UNLOCCK MUTEX, CALL FUNCTION TO HANDLE REQUEST AND RELOCK MUTEX
                 pthread_mutex_unlock(&request_mutex);
                 if (a_request->fd > 0) // Only try to handle jobs with valid fds
                     handle_job(a_request->fd);

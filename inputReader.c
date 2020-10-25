@@ -1,7 +1,5 @@
 #include <unistd.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "helperMethods.h"
 
 // Follow the array up until NULL and return its length (excluding the final NULL)

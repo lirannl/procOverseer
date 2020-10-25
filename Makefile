@@ -1,7 +1,10 @@
 all: controller overseer
 
-controller: controller/controller.c
-	gcc -o controller controller/controller.c
+controller: controller.c
+	gcc -o controller controller.c
 
-overseer: overseer/overseer.c
-	gcc -o -pthread overseer overseer/overseer.c
+overseer: overseer.c
+	gcc -pthread overseer.c -o overseer
+
+clean:
+	rm -f controller overseer
