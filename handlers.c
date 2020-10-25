@@ -54,7 +54,6 @@ void memkill_handler(char **args, pid_t *pidChild, int num_threads) {
     double percent;
     char *ptr;
 
-    pid_t pid_child_cleaned[num_threads];
     percent = strtod(args[1], &ptr);
 
     if (sysinfo(&info) != 0) {
@@ -69,12 +68,8 @@ void memkill_handler(char **args, pid_t *pidChild, int num_threads) {
             // Kill process if it uses too much memory
             if (memory_used / total_memory * 100.0 > percent) {
                 kill(pidChild[i], SIGKILL);
-            } else {
-                pid_child_cleaned[i] = pidChild[i];
-
             }
         }
     }
-    pidChild = pid_child_cleaned;
 }
 
