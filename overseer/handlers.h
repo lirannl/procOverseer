@@ -3,7 +3,7 @@
 
 #include "handlers.c"
 
-void memHandler(char **);
+char *memHandler(pid_t *);
 
 void memkillHandler(char **, pid_t pInt[5]);
 
